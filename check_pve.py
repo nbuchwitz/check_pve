@@ -96,8 +96,7 @@ class CheckPVE:
             result = result[kwargs.get('key')]
 
         if self.getUnit() == '%':
-            total = 100
-
+            total=None
             if isinstance(result, (dict,)):
                 used = self.getValue(result['used'], result['total'])
             else:
@@ -248,9 +247,6 @@ class CheckPVE:
     def addPerfdata(self, name, value, max=None, min=None):
         unit = self.getUnit()
 
-        if unit == '%':
-            max = '100'
-
         perfdata = '{}={}{}'.format(name, value, unit)
 
         if self.options.treshold_warning:
@@ -286,7 +282,7 @@ class CheckPVE:
             if self.options.mode == 'memory':
                 self.checkMemory()
             elif self.options.mode == 'io_wait':
-                self.checkCPU()
+                self.checkIOWait()
             elif self.options.mode == 'cpu':
                 self.checkCPU()
             elif self.options.mode == 'storage':
