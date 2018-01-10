@@ -106,9 +106,10 @@ class CheckPVE:
             total = self.getValue(result['total'])
             used = self.getValue(result['used'])
 
-        self.checkTresholds(used)
+        message += ' {}{}'.format(used, self.getUnit())
+        self.checkTresholds(used, message)
+
         self.addPerfdata(kwargs.get('perfkey', 'usage'), used, total)
-        self.checkMessage = message + ' {}{}'.format(used, self.getUnit())
 
     def checkSubscription(self):
         url = self.getURL('nodes/{}/subscription'.format(self.options.node))
@@ -124,23 +125,18 @@ class CheckPVE:
             subscriptionDueDate = data['nextduedate']
             subscriptionLevel = data['level']
 
-            self.checkMessage = 'Subscription of level \'{}\' is valid until {}'.format(subscriptionLevel,
-                                                                                        subscriptionDueDate)
+            dateExpire = datetime.strptime(subscriptionDueDate, '%Y-%m-%d')
+            dateToday = datetime.today()
+            delta = (dateExpire - dateToday).days
 
-            if self.options.treshold_warning or self.options.treshold_critical:
-                dateExpire = datetime.strptime(data['nextduedate'], '%Y-%m-%d')
-                dateToday = datetime.today()
-                delta = (dateExpire - dateToday).days
+            message = 'Subscription of level \'{}\' is valid until {}'.format(subscriptionLevel,
+                                                                              subscriptionDueDate)
+            messageWarningCritical = 'Subscription of level \'{}\' will expire in {} days ({})'.format(
+                subscriptionLevel,
+                delta,
+                subscriptionDueDate)
 
-                message = "Subscription of level '{}' will expire in {} days ({})"
-
-                if self.options.treshold_critical and delta <= self.options.treshold_critical:
-                    self.checkResult = self.RESULT_CRITICAL
-                    self.checkMessage = message.format(subscriptionLevel, delta, subscriptionDueDate)
-                elif self.options.treshold_warning and delta <= self.options.treshold_warning:
-                    print delta
-                    self.checkResult = self.RESULT_WARNING
-                    self.checkMessage = message.format(subscriptionLevel, delta, subscriptionDueDate)
+            self.checkTresholds(delta, message, messageWarning=messageWarningCritical, messageCritical=messageWarningCritical, lowerValue=True)
 
     def checkUpdates(self):
         url = self.getURL('nodes/{}/apt/update'.format(self.options.node))
@@ -199,12 +195,26 @@ class CheckPVE:
         url = self.getURL('nodes/{}/status'.format(self.options.node))
         self.checkAPIValue(url, 'IO wait is', key='wait', perfkey='wait')
 
-    def checkTresholds(self, value):
-        if self.options.treshold_warning != '' and self.options.treshold_critical != '':
-            if value >= float(self.options.treshold_critical):
-                self.checkResult = 2
-            elif value >= float(self.options.treshold_warning):
-                self.checkResult = 1
+    def checkTresholds(self, value, message, **kwargs):
+        isWarning = False
+        isCritical = False
+
+        if kwargs.get('lowerValue', False):
+            isWarning = self.options.treshold_warning and value < float(self.options.treshold_warning)
+            isCritical = self.options.treshold_critical and value < float(self.options.treshold_critical)
+        else:
+            isWarning = self.options.treshold_warning and value > float(self.options.treshold_warning)
+            isCritical = self.options.treshold_critical and value > float(self.options.treshold_critical)
+
+        if isCritical:
+            self.checkResult = self.RESULT_CRITICAL
+            self.checkMessage = kwargs.get('messageCritical', message)
+        elif isWarning:
+            self.checkResult = self.RESULT_WARNING
+            self.checkMessage = kwargs.get('messageWarning', message)
+        else:
+            self.checkResult = self.RESULT_OK
+            self.checkMessage = message
 
     def getValue(self, value, total=None):
         if total:
@@ -317,9 +327,9 @@ class CheckPVE:
                               help='Name of storage')
 
         check_opts.add_option('-w', '--warning', dest='treshold_warning', help='Warning treshold for check value',
-                              default='')
+                              default=None)
         check_opts.add_option('-c', '--critical', dest='treshold_critical', help='Critical treshold for check value',
-                              default='')
+                              default=None)
         check_opts.add_option('-U', '--unit', type='choice', choices=['GB', 'MB', '%'], dest='unit',
                               help='Return numerical values in GB, MB or %',
                               default='GB')
