@@ -96,7 +96,7 @@ class CheckPVE:
             result = result[kwargs.get('key')]
 
         if self.getUnit() == '%':
-            total=None
+            total = None
             if isinstance(result, (dict,)):
                 used = self.getValue(result['used'], result['total'])
             else:
@@ -109,6 +109,23 @@ class CheckPVE:
         self.checkTresholds(used, message)
 
         self.addPerfdata(kwargs.get('perfkey', 'usage'), used, total)
+
+    def checkServices(self):
+        url = self.getURL('nodes/{}/services'.format(self.options.node))
+        data = self.request(url)
+
+        failed = {}
+        for service in data:
+            if service['state'] != 'running' and service['name'] not in self.options.ignore_services:
+                failed[service['name']] = service['desc']
+
+        if failed:
+            self.checkResult = self.RESULT_CRITICAL
+            message = "{} services not running:\n\n".format(len(failed))
+            message += "\n".join(['* {}: {}'.format(i, failed[i]) for i in failed])
+            self.checkMessage = message
+        else:
+            self.checkMessage = "All services running"
 
     def checkSubscription(self):
         url = self.getURL('nodes/{}/subscription'.format(self.options.node))
@@ -285,6 +302,8 @@ class CheckPVE:
                 self.checkIOWait()
             elif self.options.mode == 'cpu':
                 self.checkCPU()
+            elif self.options.mode == 'services':
+                self.checkServices()
             elif self.options.mode == 'storage':
                 if not self.options.storage:
                     self.output(self.RESULT_UNKNOWN, "Missing the name of  the storage")
@@ -310,7 +329,8 @@ class CheckPVE:
         check_opts = p.add_argument_group('Check Options')
 
         check_opts.add_argument("-m", "--mode",
-                                choices=('cluster', 'cpu', 'memory', 'storage', 'io_wait', 'updates', 'subscription'),
+                                choices=('cluster', 'cpu', 'memory', 'storage', 'io_wait', 'updates', 'services',
+                                         'subscription'),
                                 required=True,
                                 help="Mode to use.")
 
@@ -320,8 +340,12 @@ class CheckPVE:
         check_opts.add_argument('-s', '--storage', dest='storage',
                                 help='Name of storage')
 
-        check_opts.add_argument('-w', '--warning', dest='treshold_warning', type=int, help='Warning treshold for check value')
-        check_opts.add_argument('-c', '--critical', dest='treshold_critical', type=int, help='Critical treshold for check value')
+        check_opts.add_argument('--ignore-service', dest='ignore_services', action='append', metavar='NAME', help='Ignore service NAME in checks', default=[])
+
+        check_opts.add_argument('-w', '--warning', dest='treshold_warning', type=int,
+                                help='Warning treshold for check value')
+        check_opts.add_argument('-c', '--critical', dest='treshold_critical', type=int,
+                                help='Critical treshold for check value')
 
         check_opts.add_argument('-U', '--unit', dest='unit', choices=('GB', 'MB', '%'),
                                 default='GB', help='Return numerical values in GB, MB or %%')
