@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import sys
+from datetime import datetime
+import argparse
 import requests
 import urllib3
-from datetime import datetime
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-from optparse import OptionParser, OptionGroup
 
 
 class CheckPVE:
@@ -85,7 +85,6 @@ class CheckPVE:
     def getTicket(self):
         url = self.getURL('access/ticket')
         data = {"username": self.options.api_user, "password": self.options.api_password}
-
         result = self.request(url, "post", data=data)
 
         self.ticket = {'PVEAuthCookie': result['ticket']}
@@ -254,11 +253,15 @@ class CheckPVE:
 
         perfdata = '{}={}{}'.format(name, value, unit)
 
-        if self.options.treshold_warning != '' and self.options.treshold_critical != '':
+        if self.options.treshold_warning:
             perfdata += ';{}{}'.format(self.options.treshold_warning, unit)
+        else:
+            perfdata += ';'
+
+        if self.options.treshold_critical:
             perfdata += ';{}{}'.format(self.options.treshold_critical, unit)
         else:
-            perfdata += ';;'
+            perfdata += ';'
 
         if (max):
             perfdata += ';{}{}'.format(max, unit)
@@ -298,71 +301,48 @@ class CheckPVE:
         self.checkOutput()
 
     def parseOptions(self):
-        p = OptionParser(usage="usage: %prog [options]", version=self.VERSION)
+        p = argparse.ArgumentParser(description='Check command for PVE hosts via API')
 
-        api_opts = OptionGroup(p, 'API Options')
+        api_opts = p.add_argument_group('API Options')
 
-        api_opts.add_option("-e", "--api-endpoint",
-                            dest="api_endpoint",
-                            help="PVE api endpoint hostname")
-        api_opts.add_option("-u", "--username",
-                            dest="api_user",
-                            help="PVE api user")
-        api_opts.add_option("-p", "--password",
-                            dest="api_password",
-                            help="PVE api user password")
-        api_opts.add_option("-k", "--insecure",
-                            action="store_true",
-                            dest="api_insecure",
-                            default=False,
-                            help="Do not check HTTPS certificate")
+        api_opts.add_argument("-e", "--api-endpoint", required=True, help="PVE api endpoint hostname")
+        api_opts.add_argument("-u", "--username", dest='api_user', required=True, help="PVE api user")
+        api_opts.add_argument("-p", "--password", dest='api_password', required=True, help="PVE api user password")
+        api_opts.add_argument("-k", "--insecure", dest='api_insecure', action='store_true', default=False,
+                              help="Don't verify HTTPS certificate")
 
-        p.add_option_group(api_opts)
+        check_opts = p.add_argument_group('Check Options')
 
-        check_opts = OptionGroup(p, 'Check Options')
-        check_opts.add_option("-m", "--mode",
-                              type="choice",
-                              choices=['cluster', 'cpu', 'memory', 'storage', 'io_wait', 'updates', 'subscription'],
-                              help="Do not check HTTPS certificate")
+        check_opts.add_argument("-m", "--mode",
+                                choices=('cluster', 'cpu', 'memory', 'storage', 'io_wait', 'updates', 'subscription'),
+                                required=True,
+                                help="Mode to use.")
 
-        check_opts.add_option('-n', '--node', dest='node',
-                              help='Node to check (necessary for all modes except cluster)')
+        check_opts.add_argument('-n', '--node', dest='node',
+                                help='Node to check (necessary for all modes except cluster)')
 
-        check_opts.add_option('-s', '--storage', dest='storage',
-                              help='Name of storage')
+        check_opts.add_argument('-s', '--storage', dest='storage',
+                                help='Name of storage')
 
-        check_opts.add_option('-w', '--warning', dest='treshold_warning', help='Warning treshold for check value',
-                              default=None)
-        check_opts.add_option('-c', '--critical', dest='treshold_critical', help='Critical treshold for check value',
-                              default=None)
-        check_opts.add_option('-U', '--unit', type='choice', choices=['GB', 'MB', '%'], dest='unit',
-                              help='Return numerical values in GB, MB or %',
-                              default='GB')
+        check_opts.add_argument('-w', '--warning', dest='treshold_warning', help='Warning treshold for check value')
+        check_opts.add_argument('-c', '--critical', dest='treshold_critical', help='Critical treshold for check value')
 
-        p.add_option_group(check_opts)
+        check_opts.add_argument('-U', '--unit', dest='unit', choices=('GB', 'MB', '%'),
+                                default='GB', help='Return numerical values in GB, MB or %%')
 
-        (options, args) = p.parse_args()
-
-        if not options.api_endpoint:
-            p.error("Missing API endpoint hostname")
-        if not options.api_user:
-            p.error("Missing API user")
-        if not options.api_password:
-            p.error("Missing API password")
-
-        if not options.mode:
-            p.print_help()
-            sys.exit(self.RESULT_UNKNOWN)
+        options = p.parse_args()
 
         if not options.node and options.mode != 'cluster':
             print "Missing node name for check '{}'".format(options.mode)
-            p.print_help()
+            p.print_usage()
             sys.exit(self.RESULT_UNKNOWN)
 
         if options.treshold_warning and options.treshold_critical and options.treshold_critical <= options.treshold_warning:
-            p.error("Critical must be greater than warning")
+            p.error("Critical value must be greater than warning value")
 
         self.options = options
+
+        pass
 
     def __init__(self):
         self.parseOptions()
