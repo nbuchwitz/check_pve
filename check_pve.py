@@ -52,45 +52,44 @@ class CheckPVE:
     def getURL(self, part):
         return self.API_URL.format(self.options.api_endpoint, part)
 
-    def getTicket(self):
-        url = self.getURL('access/ticket')
-
-        data = {"username": self.options.api_user, "password": self.options.api_password}
-
+    def request(self, url, method='get', **kwargs):
         try:
-            response = requests.post(url, verify=not self.options.api_insecure, data=data, timeout=5)
+            if method == 'post':
+                response = requests.post(url, verify=not self.options.api_insecure, data=kwargs.get('data', None),
+                                         timeout=5)
+            elif method == 'get':
+                response = requests.get(url, verify=not self.options.api_insecure, cookies=self.ticket)
+            else:
+                self.output(self.RESULT_CRITICAL, "Unsupport request method: {}".format(method))
         except requests.exceptions.ConnectTimeout:
             self.output(self.RESULT_UNKNOWN, "Could not connection to PVE API: connection timeout")
-
-        if response.status_code == 401:
-            self.output(self.RESULT_UNKNOWN, "Could not connection to PVE API: invalid username or password")
-
-        if not response.ok:
-            self.output(self.RESULT_UNKNOWN, 'Authentification Error: HTTP Result: \n {}'.format(response))
-
-        self.ticket = {'PVEAuthCookie': response.json()['data']['ticket']}
-
-    def APIRequest(self, url, method='get', data={}):
-        response = None
-
-        if method == 'get':
-            response = requests.get(url, verify=not self.options.api_insecure, cookies=self.ticket)
-
-        # please note: for now only get request are supported!
+        except requests.exceptions.SSLError:
+            self.output(self.RESULT_UNKNOWN, "Certificate validation for endpoint '{}' failed".format(self.options.api_endpoint))
 
         if response.ok:
             return response.json()['data']
         else:
             message = "Could not fetch data from API: "
-            if response.status_code == 403:
+
+            if response.status_code == 401:
+                message += "Could not connection to PVE API: invalid username or password"
+            elif response.status_code == 403:
                 message += "Access denied. Please check if API user has sufficient permissions."
             else:
                 message += "HTTP error code was {}".format(response.status_code)
 
             self.output(self.RESULT_UNKNOWN, message)
 
+    def getTicket(self):
+        url = self.getURL('access/ticket')
+        data = {"username": self.options.api_user, "password": self.options.api_password}
+
+        result = self.request(url, "post", data=data)
+
+        self.ticket = {'PVEAuthCookie': result['ticket']}
+
     def checkAPIValue(self, url, message, **kwargs):
-        result = self.APIRequest(url)
+        result = self.request(url)
 
         if kwargs.has_key('key'):
             result = result[kwargs.get('key')]
@@ -113,7 +112,7 @@ class CheckPVE:
 
     def checkSubscription(self):
         url = self.getURL('nodes/{}/subscription'.format(self.options.node))
-        data = self.APIRequest(url)
+        data = self.request(url)
 
         if data['status'] == 'NotFound':
             self.checkResult = self.RESULT_WARNING
@@ -144,7 +143,7 @@ class CheckPVE:
 
     def checkUpdates(self):
         url = self.getURL('nodes/{}/apt/update'.format(self.options.node))
-        count = len(self.APIRequest(url))
+        count = len(self.request(url))
         if (count):
             self.checkResult = self.RESULT_WARNING
             self.checkMessage = "{} pending updates".format(count)
@@ -153,7 +152,7 @@ class CheckPVE:
 
     def checkClusterStatus(self):
         url = self.getURL('cluster/status')
-        data = self.APIRequest(url)
+        data = self.request(url)
 
         nodes = {}
         quorate = None
