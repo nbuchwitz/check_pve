@@ -62,9 +62,11 @@ class CheckPVE:
             else:
                 self.output(self.RESULT_CRITICAL, "Unsupport request method: {}".format(method))
         except requests.exceptions.ConnectTimeout:
-            self.output(self.RESULT_UNKNOWN, "Could not connection to PVE API: connection timeout")
+            self.output(self.RESULT_UNKNOWN, "Could not connect to PVE API: Connection timeout")
+        except requests.exceptions.ConnectionError:
+            self.output(self.RESULT_UNKNOWN, "Could not connect to PVE API: Failed to resolve hostname")
         except requests.exceptions.SSLError:
-            self.output(self.RESULT_UNKNOWN, "Certificate validation for endpoint '{}' failed".format(self.options.api_endpoint))
+            self.output(self.RESULT_UNKNOWN, "Could not connect to PVE API: Certificate validation failed")
 
         if response.ok:
             return response.json()['data']
