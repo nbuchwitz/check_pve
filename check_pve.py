@@ -190,12 +190,12 @@ class CheckPVE:
         self.checkAPIValue(url, 'Memory usage is', key='memory')
 
     def checkCPU(self):
-        self.options.getUnit = '%'
+        self.options.unit = '%'
         url = self.getURL('nodes/{}/status'.format(self.options.node))
         self.checkAPIValue(url, 'CPU usage is', key='cpu')
 
     def checkIOWait(self):
-        self.options.getUnit = '%'
+        self.options.unit = '%'
         url = self.getURL('nodes/{}/status'.format(self.options.node))
         self.checkAPIValue(url, 'IO wait is', key='wait', perfkey='wait')
 
