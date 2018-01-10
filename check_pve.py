@@ -129,14 +129,18 @@ class CheckPVE:
             dateToday = datetime.today()
             delta = (dateExpire - dateToday).days
 
-            message = 'Subscription of level \'{}\' is valid until {}'.format(subscriptionLevel,
-                                                                              subscriptionDueDate)
+            subscriptionLevels = {'c': 'Community', 'b': 'Basic', 's': 'Standard', 'p': 'Premium'}
+
+            message = 'Subscription of level \'{}\' is valid until {}'.format(
+                subscriptionLevels[subscriptionLevel],
+                subscriptionDueDate)
             messageWarningCritical = 'Subscription of level \'{}\' will expire in {} days ({})'.format(
                 subscriptionLevel,
                 delta,
                 subscriptionDueDate)
 
-            self.checkTresholds(delta, message, messageWarning=messageWarningCritical, messageCritical=messageWarningCritical, lowerValue=True)
+            self.checkTresholds(delta, message, messageWarning=messageWarningCritical,
+                                messageCritical=messageWarningCritical, lowerValue=True)
 
     def checkUpdates(self):
         url = self.getURL('nodes/{}/apt/update'.format(self.options.node))
