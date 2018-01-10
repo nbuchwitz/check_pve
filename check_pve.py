@@ -320,8 +320,8 @@ class CheckPVE:
         check_opts.add_argument('-s', '--storage', dest='storage',
                                 help='Name of storage')
 
-        check_opts.add_argument('-w', '--warning', dest='treshold_warning', help='Warning treshold for check value')
-        check_opts.add_argument('-c', '--critical', dest='treshold_critical', help='Critical treshold for check value')
+        check_opts.add_argument('-w', '--warning', dest='treshold_warning', type=int, help='Warning treshold for check value')
+        check_opts.add_argument('-c', '--critical', dest='treshold_critical', type=int, help='Critical treshold for check value')
 
         check_opts.add_argument('-U', '--unit', dest='unit', choices=('GB', 'MB', '%'),
                                 default='GB', help='Return numerical values in GB, MB or %%')
