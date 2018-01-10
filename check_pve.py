@@ -182,7 +182,7 @@ class CheckPVE:
             self.checkMessage = 'Cluster is unhealthy - no quorum'
 
     def checkStorageStatus(self, name):
-        url = self.getURL('nodes/{}/storage/flashpool/status'.format(self.options.node))
+        url = self.getURL('nodes/{}/storage/{}/status'.format(self.options.node, name))
         self.checkAPIValue(url, 'Storage usage is')
 
     def checkMemory(self):
