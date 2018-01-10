@@ -254,17 +254,17 @@ class CheckPVE:
         perfdata = '{}={}{}'.format(name, value, unit)
 
         if self.options.treshold_warning:
-            perfdata += ';{}{}'.format(self.options.treshold_warning, unit)
+            perfdata += ';{}'.format(self.options.treshold_warning)
         else:
             perfdata += ';'
 
         if self.options.treshold_critical:
-            perfdata += ';{}{}'.format(self.options.treshold_critical, unit)
+            perfdata += ';{}'.format(self.options.treshold_critical)
         else:
             perfdata += ';'
 
         if (max):
-            perfdata += ';{}{}'.format(max, unit)
+            perfdata += ';{}'.format(max)
 
         self.perfdata.append(perfdata)
 
