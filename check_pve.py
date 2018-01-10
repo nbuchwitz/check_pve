@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
 import requests
 import urllib3
 from datetime import datetime
@@ -46,7 +47,7 @@ class CheckPVE:
         message = '{}: {}'.format(prefix, message)
 
         print(message)
-        exit(returnCode)
+        sys.exit(returnCode)
 
     def getURL(self, part):
         return self.API_URL.format(self.options.api_endpoint, part)
@@ -155,7 +156,7 @@ class CheckPVE:
         data = self.APIRequest(url)
 
         nodes = {}
-        quorate = -1
+        quorate = None
         cluster = ''
         for elem in data:
             if elem['type'] == 'cluster':
@@ -164,19 +165,18 @@ class CheckPVE:
             elif elem['type'] == 'node':
                 nodes[elem['name']] = elem['online']
 
-        if quorate or quorate == -1:
-            if quorate:
-                nodeCount = len(nodes)
-                nodesOnlineCount = len({k: v for k, v in nodes.iteritems() if v})
+        if not quorate:
+            self.checkMessage = 'No cluster configuration found'
+        elif quorate:
+            nodeCount = len(nodes)
+            nodesOnlineCount = len({k: v for k, v in nodes.iteritems() if v})
 
-                if nodeCount > nodesOnlineCount:
-                    diff = nodeCount - nodesOnlineCount
-                    self.checkResult = self.RESULT_WARNING
-                    self.checkMessage = "Cluster '{}' is healthy, but {} node(s) offline'".format(cluster, diff)
-                else:
-                    self.checkMessage = "Cluster '{}' is healthy'".format(cluster)
+            if nodeCount > nodesOnlineCount:
+                diff = nodeCount - nodesOnlineCount
+                self.checkResult = self.RESULT_WARNING
+                self.checkMessage = "Cluster '{}' is healthy, but {} node(s) offline'".format(cluster, diff)
             else:
-                self.checkMessage = 'No cluster configuration found'
+                self.checkMessage = "Cluster '{}' is healthy'".format(cluster)
         else:
             self.checkResult = self.RESULT_CRITICAL
             self.checkMessage = 'Cluster is unhealthy - no quorum'
@@ -265,8 +265,6 @@ class CheckPVE:
         if self.options.mode == 'cluster':
             self.checkClusterStatus()
         else:
-            if not self.options.node:
-                self.output(self.RESULT_UNKNOWN, "Missing node name for check '{}'".format(self.options.mode))
             if self.options.mode == 'memory':
                 self.checkMemory()
             elif self.options.mode == 'io_wait':
@@ -336,6 +334,15 @@ class CheckPVE:
             p.error("Missing API user")
         if not options.api_password:
             p.error("Missing API password")
+
+        if not options.mode:
+            p.print_help()
+            sys.exit(self.RESULT_UNKNOWN)
+
+        if not options.node and options.mode != 'cluster':
+            print "Missing node name for check '{}'".format(options.mode)
+            p.print_help()
+            sys.exit(self.RESULT_UNKNOWN)
 
         if options.treshold_warning and options.treshold_critical and options.treshold_critical <= options.treshold_warning:
             p.error("Critical must be greater than warning")
