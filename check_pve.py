@@ -44,7 +44,7 @@ class CheckPVE:
         elif returnCode == self.RESULT_UNKNOWN:
             prefix = 'UNKNOWN'
 
-        message = '{}: {}'.format(prefix, message)
+        message = '{} - {}'.format(prefix, message)
 
         print(message)
         sys.exit(returnCode)
