@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+from __future__ import print_function
 import sys
 from datetime import datetime
 import argparse
@@ -53,20 +55,30 @@ class CheckPVE:
         return self.API_URL.format(self.options.api_endpoint, part)
 
     def request(self, url, method='get', **kwargs):
+        response = None
         try:
             if method == 'post':
-                response = requests.post(url, verify=not self.options.api_insecure, data=kwargs.get('data', None),
-                                         timeout=5)
+                response = requests.post(
+                    url,
+                    verify=not self.options.api_insecure,
+                    data=kwargs.get('data', None),
+                    timeout=5
+                )
             elif method == 'get':
-                response = requests.get(url, verify=not self.options.api_insecure, cookies=self.ticket)
+                response = requests.get(
+                    url,
+                    verify=not self.options.api_insecure,
+                    cookies=self.ticket,
+                    params=kwargs.get('params', None)
+                )
             else:
                 self.output(self.RESULT_CRITICAL, "Unsupport request method: {}".format(method))
         except requests.exceptions.ConnectTimeout:
             self.output(self.RESULT_UNKNOWN, "Could not connect to PVE API: Connection timeout")
-        except requests.exceptions.ConnectionError:
-            self.output(self.RESULT_UNKNOWN, "Could not connect to PVE API: Failed to resolve hostname")
         except requests.exceptions.SSLError:
             self.output(self.RESULT_UNKNOWN, "Could not connect to PVE API: Certificate validation failed")
+        except requests.exceptions.ConnectionError:
+            self.output(self.RESULT_UNKNOWN, "Could not connect to PVE API: Failed to resolve hostname")
 
         if response.ok:
             return response.json()['data']
@@ -91,24 +103,54 @@ class CheckPVE:
 
     def checkAPIValue(self, url, message, **kwargs):
         result = self.request(url)
+        used = None
 
         if kwargs.has_key('key'):
             result = result[kwargs.get('key')]
 
-        if self.getUnit() == '%':
-            total = None
-            if isinstance(result, (dict,)):
-                used = self.getValue(result['used'], result['total'])
-            else:
-                used = self.getValue(float(result) * 100)
-        else:
-            total = self.getValue(result['total'])
+        if isinstance(result, (dict,)):
+            used_percent = self.getValue(result['used'], result['total'])
             used = self.getValue(result['used'])
+            total = self.getValue(result['total'])
 
-        message += ' {}{}'.format(used, self.getUnit())
-        self.checkTresholds(used, message)
+            self.addPerfdata(kwargs.get('perfkey', 'usage'), used_percent)
+            self.addPerfdata(kwargs.get('perfkey', 'used'), used, max=total, unit='MB')
+        else:
+            used_percent = round(float(result) * 100, 2)
+            self.addPerfdata(kwargs.get('perfkey', 'usage'), used_percent)
 
-        self.addPerfdata(kwargs.get('perfkey', 'usage'), used, total)
+        if (self.options.values_mb):
+            message += ' {}{}'.format(used, 'MB')
+            value = used
+        else:
+            message += ' {}{}'.format(used_percent, '%')
+            value = used_percent
+
+        self.checkTresholds(value, message)
+
+    def checkVMStatus(self, name):
+        url = self.getURL('cluster/resources', )
+        data = self.request(url, params={'type': 'vm'})
+
+        metrics = {}
+        for vm in data:
+            if vm['name'] == name:
+                if (vm['status'] != 'running'):
+                    self.checkMessage = "VM '{}' not running".format(name)
+                    self.checkResult = self.RESULT_CRITICAL
+                    break
+
+                metrics['cpu'] = round(vm['cpu'] * 100, 2)
+                metrics['memory'] = self.getValue(vm['mem'], vm['maxmem'])
+                break
+
+        if metrics:
+            for (metric, value) in metrics.items():
+                self.addPerfdata(metric, value)
+            self.checkMessage = "VM '{}' is running".format(name)
+        else:
+            self.checkMessage = "VM '{}' not found".format(name)
+            self.checkResult = self.RESULT_WARNING
 
     def checkServices(self):
         url = self.getURL('nodes/{}/services'.format(self.options.node))
@@ -197,7 +239,7 @@ class CheckPVE:
             self.checkResult = self.RESULT_CRITICAL
             self.checkMessage = 'Cluster is unhealthy - no quorum'
 
-    def checkStorageStatus(self, name):
+    def checkStorage(self, name):
         url = self.getURL('nodes/{}/storage/{}/status'.format(self.options.node, name))
         self.checkAPIValue(url, 'Storage usage is')
 
@@ -206,12 +248,10 @@ class CheckPVE:
         self.checkAPIValue(url, 'Memory usage is', key='memory')
 
     def checkCPU(self):
-        self.options.unit = '%'
         url = self.getURL('nodes/{}/status'.format(self.options.node))
         self.checkAPIValue(url, 'CPU usage is', key='cpu')
 
     def checkIOWait(self):
-        self.options.unit = '%'
         url = self.getURL('nodes/{}/status'.format(self.options.node))
         self.checkAPIValue(url, 'IO wait is', key='wait', perfkey='wait')
 
@@ -237,47 +277,32 @@ class CheckPVE:
             self.checkMessage = message
 
     def getValue(self, value, total=None):
+        value = float(value)
+
         if total:
-            value = self.getPercentValue(value, total)
+            value /= float(total) / 100
         else:
-            value = self.transformValue(value)
+            value /= 1024 * 1024
 
         return round(value, 2)
 
-    def getPercentValue(self, used, total):
-        return float(used) / float(total) * 100
-
-    def transformValue(self, value):
-        value = float(value)
-        unit = self.getUnit()
-
-        if unit == 'GB':
-            value /= 1024 * 1024 * 1024
-        elif unit == 'MB':
-            value /= 1024 * 1024
-
-        return value
-
-    def getUnit(self):
-        return self.options.unit
-
-    def addPerfdata(self, name, value, max=None, min=None):
-        unit = self.getUnit()
+    def addPerfdata(self, name, value, **kwargs):
+        unit = kwargs.get('unit', '%')
 
         perfdata = '{}={}{}'.format(name, value, unit)
 
-        if self.options.treshold_warning:
+        if self.options.treshold_warning and (self.options.values_mb == (unit == 'MB')):
             perfdata += ';{}'.format(self.options.treshold_warning)
         else:
             perfdata += ';'
 
-        if self.options.treshold_critical:
+        if self.options.treshold_critical and (self.options.values_mb == (unit == 'MB')):
             perfdata += ';{}'.format(self.options.treshold_critical)
         else:
             perfdata += ';'
 
-        if (max):
-            perfdata += ';{}'.format(max)
+        if (kwargs.has_key('max')):
+            perfdata += ';{}'.format(kwargs.get('max'))
 
         self.perfdata.append(perfdata)
 
@@ -304,14 +329,17 @@ class CheckPVE:
                 self.checkCPU()
             elif self.options.mode == 'services':
                 self.checkServices()
-            elif self.options.mode == 'storage':
-                if not self.options.storage:
-                    self.output(self.RESULT_UNKNOWN, "Missing the name of  the storage")
-                self.checkStorageStatus(self.options.storage)
             elif self.options.mode == 'updates':
                 self.checkUpdates()
             elif self.options.mode == 'subscription':
                 self.checkSubscription()
+            elif self.options.mode == 'storage':
+                self.checkStorage(self.options.name)
+            elif self.options.mode == 'vm':
+                self.checkVMStatus(self.options.name)
+            else:
+                print("error: unknown check mode '{}'".format(self.options.mode))
+                sys.exit(self.RESULT_UNKNOWN)
 
         self.checkOutput()
 
@@ -330,39 +358,42 @@ class CheckPVE:
 
         check_opts.add_argument("-m", "--mode",
                                 choices=('cluster', 'cpu', 'memory', 'storage', 'io_wait', 'updates', 'services',
-                                         'subscription'),
+                                         'subscription', 'vm'),
                                 required=True,
                                 help="Mode to use.")
 
         check_opts.add_argument('-n', '--node', dest='node',
                                 help='Node to check (necessary for all modes except cluster)')
 
-        check_opts.add_argument('-s', '--storage', dest='storage',
-                                help='Name of storage')
+        check_opts.add_argument('--name', dest='name',
+                                help='Name of storage or vm')
 
-        check_opts.add_argument('--ignore-service', dest='ignore_services', action='append', metavar='NAME', help='Ignore service NAME in checks', default=[])
+        check_opts.add_argument('--ignore-service', dest='ignore_services', action='append', metavar='NAME',
+                                help='Ignore service NAME in checks', default=[])
 
-        check_opts.add_argument('-w', '--warning', dest='treshold_warning', type=int,
+        check_opts.add_argument('-w', '--warning', dest='treshold_warning', type=float,
                                 help='Warning treshold for check value')
-        check_opts.add_argument('-c', '--critical', dest='treshold_critical', type=int,
+        check_opts.add_argument('-c', '--critical', dest='treshold_critical', type=float,
                                 help='Critical treshold for check value')
-
-        check_opts.add_argument('-U', '--unit', dest='unit', choices=('GB', 'MB', '%'),
-                                default='GB', help='Return numerical values in GB, MB or %%')
+        check_opts.add_argument('-M', dest='values_mb', action='store_true', default=False,
+                                help='Values are shown in MB (if available). Tresholds are also treated as MB values')
 
         options = p.parse_args()
 
-        if not options.node and options.mode != 'cluster':
-            print "Missing node name for check '{}'".format(options.mode)
+        if not options.node and options.mode not in ['cluster', 'vm']:
             p.print_usage()
+            print("{}: error: --mode {} requires node name".format(p.prog, options.mode))
+            sys.exit(self.RESULT_UNKNOWN)
+
+        if not options.name and options.mode in ['storage', 'vm']:
+            p.print_usage()
+            print("{}: error: --mode {} requires --name".format(p.prog, options.mode))
             sys.exit(self.RESULT_UNKNOWN)
 
         if options.treshold_warning and options.treshold_critical and options.treshold_critical <= options.treshold_warning:
             p.error("Critical value must be greater than warning value")
 
         self.options = options
-
-        pass
 
     def __init__(self):
         self.parseOptions()
