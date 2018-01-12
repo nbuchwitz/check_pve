@@ -223,7 +223,7 @@ class CheckPVE:
             elif elem['type'] == 'node':
                 nodes[elem['name']] = elem['online']
 
-        if not quorate:
+        if quorate == None:
             self.checkMessage = 'No cluster configuration found'
         elif quorate:
             nodeCount = len(nodes)
