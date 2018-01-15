@@ -1,9 +1,31 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
+# ------------------------------------------------------------------------------
+# check_pve.py - A check plugin for Proxmox Virtual Environment (PVE).
+# Copyright (C) 2018  Nicolai Buchwitz <nb@tipi-net.de>
+#
+# Version: 1.0.0
+#
+# ------------------------------------------------------------------------------
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# ------------------------------------------------------------------------------
+
 from __future__ import print_function
 import sys
+from enum import Enum
 from datetime import datetime
 import argparse
 import requests
@@ -12,14 +34,16 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
+class NagiosState(Enum):
+    OK = 0
+    WARNING = 1
+    CRITICAL = 2
+    UNKNOWN = 3
+
+
 class CheckPVE:
     VERSION = '1.0.0'
     API_URL = 'https://{}:8006/api2/json/{}'
-
-    RESULT_OK = 0
-    RESULT_WARNING = 1
-    RESULT_CRITICAL = 2
-    RESULT_UNKNOWN = 3
 
     options = {}
     ticket = None
@@ -35,21 +59,12 @@ class CheckPVE:
         self.output(self.checkResult, message)
 
     def output(self, returnCode, message):
-        prefix = ''
-
-        if returnCode == self.RESULT_OK:
-            prefix = 'OK'
-        elif returnCode == self.RESULT_WARNING:
-            prefix = 'WARNING'
-        elif returnCode == self.RESULT_CRITICAL:
-            prefix = 'CRITICAL'
-        elif returnCode == self.RESULT_UNKNOWN:
-            prefix = 'UNKNOWN'
+        prefix = returnCode.name
 
         message = '{} - {}'.format(prefix, message)
 
         print(message)
-        sys.exit(returnCode)
+        sys.exit(returnCode.value)
 
     def getURL(self, part):
         return self.API_URL.format(self.options.api_endpoint, part)
@@ -72,13 +87,13 @@ class CheckPVE:
                     params=kwargs.get('params', None)
                 )
             else:
-                self.output(self.RESULT_CRITICAL, "Unsupport request method: {}".format(method))
+                self.output(NagiosState.CRITICAL, "Unsupport request method: {}".format(method))
         except requests.exceptions.ConnectTimeout:
-            self.output(self.RESULT_UNKNOWN, "Could not connect to PVE API: Connection timeout")
+            self.output(NagiosState.UNKNOWN, "Could not connect to PVE API: Connection timeout")
         except requests.exceptions.SSLError:
-            self.output(self.RESULT_UNKNOWN, "Could not connect to PVE API: Certificate validation failed")
+            self.output(NagiosState.UNKNOWN, "Could not connect to PVE API: Certificate validation failed")
         except requests.exceptions.ConnectionError:
-            self.output(self.RESULT_UNKNOWN, "Could not connect to PVE API: Failed to resolve hostname")
+            self.output(NagiosState.UNKNOWN, "Could not connect to PVE API: Failed to resolve hostname")
 
         if response.ok:
             return response.json()['data']
@@ -92,7 +107,7 @@ class CheckPVE:
             else:
                 message += "HTTP error code was {}".format(response.status_code)
 
-            self.output(self.RESULT_UNKNOWN, message)
+            self.output(NagiosState.UNKNOWN, message)
 
     def getTicket(self):
         url = self.getURL('access/ticket')
@@ -137,7 +152,7 @@ class CheckPVE:
             if vm['name'] == name:
                 if (vm['status'] != 'running'):
                     self.checkMessage = "VM '{}' not running".format(name)
-                    self.checkResult = self.RESULT_CRITICAL
+                    self.checkResult = NagiosState.CRITICAL
                     break
 
                 metrics['cpu'] = round(vm['cpu'] * 100, 2)
@@ -150,7 +165,7 @@ class CheckPVE:
             self.checkMessage = "VM '{}' is running".format(name)
         else:
             self.checkMessage = "VM '{}' not found".format(name)
-            self.checkResult = self.RESULT_WARNING
+            self.checkResult = NagiosState.WARNING
 
     def checkServices(self):
         url = self.getURL('nodes/{}/services'.format(self.options.node))
@@ -162,7 +177,7 @@ class CheckPVE:
                 failed[service['name']] = service['desc']
 
         if failed:
-            self.checkResult = self.RESULT_CRITICAL
+            self.checkResult = NagiosState.CRITICAL
             message = "{} services not running:\n\n".format(len(failed))
             message += "\n".join(['* {}: {}'.format(i, failed[i]) for i in failed])
             self.checkMessage = message
@@ -174,10 +189,10 @@ class CheckPVE:
         data = self.request(url)
 
         if data['status'] == 'NotFound':
-            self.checkResult = self.RESULT_WARNING
+            self.checkResult = NagiosState.WARNING
             self.checkMessage = "No valid subscription found"
         if data['status'] == 'Inactive':
-            self.checkResult = self.RESULT_CRITICAL
+            self.checkResult = NagiosState.CRITICAL
             self.checkMessage = "Subscription expired"
         elif data['status'] == 'Active':
             subscriptionDueDate = data['nextduedate']
@@ -204,7 +219,7 @@ class CheckPVE:
         url = self.getURL('nodes/{}/apt/update'.format(self.options.node))
         count = len(self.request(url))
         if (count):
-            self.checkResult = self.RESULT_WARNING
+            self.checkResult = NagiosState.WARNING
             self.checkMessage = "{} pending updates".format(count)
         else:
             self.checkMessage = "System up to date"
@@ -231,12 +246,12 @@ class CheckPVE:
 
             if nodeCount > nodesOnlineCount:
                 diff = nodeCount - nodesOnlineCount
-                self.checkResult = self.RESULT_WARNING
+                self.checkResult = NagiosState.WARNING
                 self.checkMessage = "Cluster '{}' is healthy, but {} node(s) offline'".format(cluster, diff)
             else:
                 self.checkMessage = "Cluster '{}' is healthy'".format(cluster)
         else:
-            self.checkResult = self.RESULT_CRITICAL
+            self.checkResult = NagiosState.CRITICAL
             self.checkMessage = 'Cluster is unhealthy - no quorum'
 
     def checkStorage(self, name):
@@ -267,13 +282,13 @@ class CheckPVE:
             isCritical = self.options.treshold_critical and value > float(self.options.treshold_critical)
 
         if isCritical:
-            self.checkResult = self.RESULT_CRITICAL
+            self.checkResult = NagiosState.CRITICAL
             self.checkMessage = kwargs.get('messageCritical', message)
         elif isWarning:
-            self.checkResult = self.RESULT_WARNING
+            self.checkResult = NagiosState.WARNING
             self.checkMessage = kwargs.get('messageWarning', message)
         else:
-            self.checkResult = self.RESULT_OK
+            self.checkResult = NagiosState.OK
             self.checkMessage = message
 
     def getValue(self, value, total=None):
@@ -316,7 +331,7 @@ class CheckPVE:
         return perfdata
 
     def check(self):
-        self.checkResult = self.RESULT_OK
+        self.checkResult = NagiosState.OK
 
         if self.options.mode == 'cluster':
             self.checkClusterStatus()
@@ -338,8 +353,8 @@ class CheckPVE:
             elif self.options.mode == 'vm':
                 self.checkVMStatus(self.options.name)
             else:
-                print("error: unknown check mode '{}'".format(self.options.mode))
-                sys.exit(self.RESULT_UNKNOWN)
+                message = "Check mode '{}' not known".format(self.options.mode)
+                self.output(NagiosState.UNKNOWN, message)
 
         self.checkOutput()
 
@@ -382,13 +397,13 @@ class CheckPVE:
 
         if not options.node and options.mode not in ['cluster', 'vm']:
             p.print_usage()
-            print("{}: error: --mode {} requires node name".format(p.prog, options.mode))
-            sys.exit(self.RESULT_UNKNOWN)
+            message = "{}: error: --mode {} requires node name".format(p.prog, options.mode)
+            self.output(NagiosState.UNKNOWN, message)
 
         if not options.name and options.mode in ['storage', 'vm']:
             p.print_usage()
-            print("{}: error: --mode {} requires --name".format(p.prog, options.mode))
-            sys.exit(self.RESULT_UNKNOWN)
+            message = "{}: error: --mode {} requires --name".format(p.prog, options.mode)
+            self.output(NagiosState.UNKNOWN, message)
 
         if options.treshold_warning and options.treshold_critical and options.treshold_critical <= options.treshold_warning:
             p.error("Critical value must be greater than warning value")
