@@ -4,10 +4,9 @@ Icinga check command for Proxmox VE via API
 ## usage
 ```
 usage: check_pve.py [-h] -e API_ENDPOINT -u API_USER -p API_PASSWORD [-k] -m
-                    {cluster,cpu,memory,storage,io_wait,updates,services,subscription}
-                    [-n NODE] [-s STORAGE] [--ignore-service NAME]
-                    [-w TRESHOLD_WARNING] [-c TRESHOLD_CRITICAL]
-                    [-U {GB,MB,%}]
+                    {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm}
+                    [-n NODE] [--name NAME] [--ignore-service NAME]
+                    [-w TRESHOLD_WARNING] [-c TRESHOLD_CRITICAL] [-M]
 
 Check command for PVE hosts via API
 
@@ -24,17 +23,16 @@ API Options:
   -k, --insecure        Don't verify HTTPS certificate
 
 Check Options:
-  -m {cluster,cpu,memory,storage,io_wait,updates,services,subscription}, --mode {cluster,cpu,memory,storage,io_wait,updates,services,subscription}
+  -m {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm}, --mode {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm}
                         Mode to use.
   -n NODE, --node NODE  Node to check (necessary for all modes except cluster)
-  -s STORAGE, --storage STORAGE
-                        Name of storage
+  --name NAME           Name of storage or vm
   --ignore-service NAME
                         Ignore service NAME in checks
   -w TRESHOLD_WARNING, --warning TRESHOLD_WARNING
                         Warning treshold for check value
   -c TRESHOLD_CRITICAL, --critical TRESHOLD_CRITICAL
                         Critical treshold for check value
-  -U {GB,MB,%}, --unit {GB,MB,%}
-                        Return numerical values in GB, MB or %
+  -M                    Values are shown in MB (if available). Tresholds are
+                        also treated as MB values
 ```
