@@ -25,13 +25,18 @@
 
 from __future__ import print_function
 import sys
-from enum import Enum
-from datetime import datetime
-import argparse
-import requests
-import urllib3
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+try:
+    from enum import Enum
+    from datetime import datetime
+    import argparse
+    import requests
+    import urllib3
+
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+except ImportError as e:
+    print("Missing python module: {}".format(e.message))
+    sys.exit(255)
 
 
 class NagiosState(Enum):
@@ -364,7 +369,8 @@ class CheckPVE:
         api_opts = p.add_argument_group('API Options')
 
         api_opts.add_argument("-e", "--api-endpoint", required=True, help="PVE api endpoint hostname")
-        api_opts.add_argument("-u", "--username", dest='api_user', required=True, help="PVE api user")
+        api_opts.add_argument("-u", "--username", dest='api_user', required=True,
+                              help="PVE api user (e.g. icinga2@pve or icinga2@pam, depending on which backend you have chosen in proxmox)")
         api_opts.add_argument("-p", "--password", dest='api_password', required=True, help="PVE api user password")
         api_opts.add_argument("-k", "--insecure", dest='api_insecure', action='store_true', default=False,
                               help="Don't verify HTTPS certificate")

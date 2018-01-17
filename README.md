@@ -1,18 +1,32 @@
 # check_pve
 Icinga check command for Proxmox VE via API
 
-## installation / dependencies
-### Debian / Ubuntu
+## Requirements
+
+This check command depends on the following python modules:
+ * enum
+ * requests
+ * argparse
+
+**Installation on Debian / Ubuntu**
 ```
 apt install python-enum34 python-requests
 ```
 
-### Redhat / CentOS
+**Installation on Redhat 6 / CentOS 6**
+```
+yum install python-argparse python-enum34 python-requests
+```
+
+**Installation on Redhat 7 / CentOS 7**
 ```
 yum install python-enum34 python-requests
 ```
 
-## usage
+## Usage
+
+The ``icinga2`` folder contains the command defintion and service examples for use with Icinga2.
+
 ```
 usage: check_pve.py [-h] -e API_ENDPOINT -u API_USER -p API_PASSWORD [-k] -m
                     {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm}
@@ -28,7 +42,8 @@ API Options:
   -e API_ENDPOINT, --api-endpoint API_ENDPOINT
                         PVE api endpoint hostname
   -u API_USER, --username API_USER
-                        PVE api user (e.g. icinga2@pve or icinga2@pam, depending on which backend you have chosen in proxmox)
+                        PVE api user (e.g. icinga2@pve or icinga2@pam,
+                        depending on which backend you have chosen in proxmox)
   -p API_PASSWORD, --password API_PASSWORD
                         PVE api user password
   -k, --insecure        Don't verify HTTPS certificate
@@ -48,74 +63,50 @@ Check Options:
                         also treated as MB values
 ```
 
-# hints
+## Examples
 
-Try something like that first ...
-
+**Check cluster health**
 ```
-./check_pve.py -u icinga2@pve -p uoXei8fee9shia4tah4voobe -e proxmox.localdomain.local -k -m cluster
-```
-
-## Get cluster health
-```
-./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -k -m cluster
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m cluster
 OK - Cluster 'proxmox1' is healthy'
 ```
 
-## Get CPU load
+**Check CPU load**
 ```
-./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -k -m cpu -n node1
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m memory -n node1
 OK - CPU usage is 2.4%|usage=2.4%;;
 ```
 
-## Get storage usage
+**Check memory usage**
 ```
-./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -k -m storage -n node1 --name local
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m cpu -n node1
+OK - Memory usage is 25.55%|usage=25.55%;; used=49415.93MB;;;193403.4
+```
+
+**Check storage usage**
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m storage -n node1 --name local
 OK - Storage usage is 54.23%|usage=54.23%;; used=128513.11MB;;;236980.36
 ```
 
-# faq
-## AttributeError: 'int' object has no attribute 'name'
-### Problem
+**Check subscription status**
 ```
-Traceback (most recent call last):
-  File "/usr/lib/nagios/plugins/check_pve.py", line 419, in <module>
-    pve.check()
-  File "/usr/lib/nagios/plugins/check_pve.py", line 359, in check
-    self.checkOutput()
-  File "/usr/lib/nagios/plugins/check_pve.py", line 59, in checkOutput
-    self.output(self.checkResult, message)
-  File "/usr/lib/nagios/plugins/check_pve.py", line 62, in output
-    prefix = returnCode.name
-AttributeError: 'int' object has no attribute 'name'
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m subscription -n node1
+OK - Subscription of level 'Community' is valid until 2019-01-09
 ```
 
-### Solution
-Be sure, python-enum34 (enum34) is installed.
-https://docs.python.org/3/library/enum.html#creating-an-enum
+**Check VM status**
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m vm -n node1 --name test-vm
+OK - VM 'test-vm' is running|cpu=1.85%;; memory=8.33%;;
+```
 
-## 
-### Problem
-```
-Traceback (most recent call last):
-  File "/usr/lib/nagios/plugins/check_pve.py", line 418, in <module>
-    pve = CheckPVE()
-  File "/usr/lib/nagios/plugins/check_pve.py", line 415, in __init__
-    self.getTicket()
-  File "/usr/lib/nagios/plugins/check_pve.py", line 115, in getTicket
-    result = self.request(url, "post", data=data)
-  File "/usr/lib/nagios/plugins/check_pve.py", line 96, in request
-    self.output(NagiosState.UNKNOWN, "Could not connect to PVE API: Failed to resolve hostname")
-  File "/usr/lib/nagios/plugins/check_pve.py", line 62, in output
-    prefix = returnCode.name
-AttributeError: 'int' object has no attribute 'name'
-```
-### Solution
-Check the connection with curl
-```
-curl -k -d "username=<API_USER>&password=<API_PASSWORD>"  https://<API_ENDPOINT>:8006/api2/json/access/ticket
-``` 
-Maybee a proxy (http_proxy, https_proxy) env variable blocks the connection to your proxmox host
+## FAQ
+
+### Could not connect to PVE API: Failed to resolve hostname
+
+Verify that your DNS server is working and can resolve your hostname. If everything is fine check for proxyserver environment variables (HTTP_PROXY,HTTPS_PROXY), which maybe not allow communication to port 8006.
+
 
 
 
