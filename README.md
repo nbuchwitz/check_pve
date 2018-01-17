@@ -70,7 +70,7 @@ OK - CPU usage is 2.4%|usage=2.4%;;
 
 ## Get storage usage
 ```
-./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -k -m storage -n server914sx --name local
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -k -m storage -n node1 --name local
 OK - Storage usage is 54.23%|usage=54.23%;; used=128513.11MB;;;236980.36
 ```
 
