@@ -201,19 +201,17 @@ class CheckPVE:
             self.checkMessage = "Subscription expired"
         elif data['status'] == 'Active':
             subscriptionDueDate = data['nextduedate']
-            subscriptionLevel = data['level']
+            subscriptionProductName = data['productname']
 
             dateExpire = datetime.strptime(subscriptionDueDate, '%Y-%m-%d')
             dateToday = datetime.today()
             delta = (dateExpire - dateToday).days
 
-            subscriptionLevels = {'c': 'Community', 'b': 'Basic', 's': 'Standard', 'p': 'Premium'}
-
-            message = 'Subscription of level \'{}\' is valid until {}'.format(
-                subscriptionLevels[subscriptionLevel],
+            message = '{} is valid until {}'.format(
+                subscriptionProductName,
                 subscriptionDueDate)
-            messageWarningCritical = 'Subscription of level \'{}\' will expire in {} days ({})'.format(
-                subscriptionLevel,
+            messageWarningCritical = '{} will expire in {} days ({})'.format(
+                subscriptionProductName,
                 delta,
                 subscriptionDueDate)
 
