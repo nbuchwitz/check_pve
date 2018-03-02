@@ -33,7 +33,10 @@ try:
     import requests
     import urllib3
 
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    #https://stackoverflow.com/a/28002687/5554903
+    from requests.packages.urllib3.exceptions import InsecureRequestWarning
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
 except ImportError as e:
     print("Missing python module: {}".format(e.message))
     sys.exit(255)
