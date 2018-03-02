@@ -113,6 +113,8 @@ OK - No failed replication jobs on node1
 
 Verify that your DNS server is working and can resolve your hostname. If everything is fine check for proxyserver environment variables (HTTP_PROXY,HTTPS_PROXY), which maybe not allow communication to port 8006.
 
+## Contributors
 
+* Alexey Kukushkin ([meshok0](https://github.com/meshok0))
 
 
