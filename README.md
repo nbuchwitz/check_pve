@@ -105,7 +105,7 @@ OK - VM 'test-vm' is running|cpu=1.85%;; memory=8.33%;;
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m replication -n node1
 OK - No failed replication jobs on node1
-
+```
 
 ## FAQ
 
