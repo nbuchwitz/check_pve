@@ -15,7 +15,7 @@ apt install python-enum34 python-requests
 
 **Installation on Redhat 6 / CentOS 6**
 ```
-yum install python-argparse python-enum34 python-requests
+yum install python-argparse python-enum34 python34-requests
 ```
 
 **Installation on Redhat 7 / CentOS 7**
@@ -29,7 +29,7 @@ The ``icinga2`` folder contains the command defintion and service examples for u
 
 ```
 usage: check_pve.py [-h] -e API_ENDPOINT -u API_USER -p API_PASSWORD [-k] -m
-                    {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm}
+                    {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,replication}
                     [-n NODE] [--name NAME] [--ignore-service NAME]
                     [-w TRESHOLD_WARNING] [-c TRESHOLD_CRITICAL] [-M]
 
@@ -49,7 +49,7 @@ API Options:
   -k, --insecure        Don't verify HTTPS certificate
 
 Check Options:
-  -m {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm}, --mode {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm}
+  -m {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,replication}, --mode {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,replication}
                         Mode to use.
   -n NODE, --node NODE  Node to check (necessary for all modes except cluster)
   --name NAME           Name of storage or vm
@@ -99,6 +99,12 @@ OK - Subscription of level 'Community' is valid until 2019-01-09
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m vm -n node1 --name test-vm
 OK - VM 'test-vm' is running|cpu=1.85%;; memory=8.33%;;
+```
+
+**Check storage replication status**
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m replication -n node1
+OK - No failed replication jobs on node1
 ```
 
 ## FAQ
