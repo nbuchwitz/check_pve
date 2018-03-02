@@ -172,6 +172,25 @@ class CheckPVE:
             self.checkMessage = "VM '{}' not found".format(name)
             self.checkResult = NagiosState.WARNING
 
+    def checkReplication(self, name):
+        url = self.getURL('nodes/{}/replication'.format(self.options.node))
+        data = self.request(url)
+        failed_jobs = [] # format: [{guest: str, fail_count: int, error: str}]
+
+        for job in data:
+            if job['fail_count'] > 0:
+                failed_jobs.append({'guest': job['guest'], 'fail_count': job['fail_count'], 'error': job['error']})
+
+        if len(failed_jobs) > 0:
+            message = "Failed replication jobs on {}: ".format(self.options.node)
+            for job in failed_jobs:
+                message = message + "GUEST: {j[guest]}, FAIL_COUNT: {j[fail_count]}, ERROR: {j[error]} ; ".format(j=job)
+            self.checkMessage = message
+            self.checkResult = NagiosState.WARNING
+        else:
+            self.checkMessage = "No failed replication jobs on {}".format(self.options.node)
+            self.checkResult = NagiosState.OK
+
     def checkServices(self):
         url = self.getURL('nodes/{}/services'.format(self.options.node))
         data = self.request(url)
@@ -355,6 +374,8 @@ class CheckPVE:
                 self.checkStorage(self.options.name)
             elif self.options.mode == 'vm':
                 self.checkVMStatus(self.options.name)
+            elif self.options.mode == 'replication':
+                self.checkReplication(self.options.name)
             else:
                 message = "Check mode '{}' not known".format(self.options.mode)
                 self.output(NagiosState.UNKNOWN, message)
@@ -377,7 +398,7 @@ class CheckPVE:
 
         check_opts.add_argument("-m", "--mode",
                                 choices=('cluster', 'cpu', 'memory', 'storage', 'io_wait', 'updates', 'services',
-                                         'subscription', 'vm'),
+                                         'subscription', 'vm', 'replication'),
                                 required=True,
                                 help="Mode to use.")
 
