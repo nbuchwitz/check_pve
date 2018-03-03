@@ -33,8 +33,8 @@ try:
     import requests
     import urllib3
 
-    #https://stackoverflow.com/a/28002687/5554903
     from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 except ImportError as e:
@@ -176,13 +176,22 @@ class CheckPVE:
             self.checkResult = NagiosState.WARNING
 
     def checkReplication(self, name):
+        data = None
         url = self.getURL('nodes/{}/replication'.format(self.options.node))
-        data = self.request(url)
-        failed_jobs = [] # format: [{guest: str, fail_count: int, error: str}]
+
+        if self.options.vmid:
+            data = self.request(url, params={'guest': self.options.vmid})
+        else:
+            data = self.request(url)
+
+        failed_jobs = []  # format: [{guest: str, fail_count: int, error: str}]
+        performance_data = []
 
         for job in data:
             if job['fail_count'] > 0:
                 failed_jobs.append({'guest': job['guest'], 'fail_count': job['fail_count'], 'error': job['error']})
+            else:
+                performance_data.append({'id': job['id'], 'duration': job['duration']})
 
         if len(failed_jobs) > 0:
             message = "Failed replication jobs on {}: ".format(self.options.node)
@@ -193,6 +202,10 @@ class CheckPVE:
         else:
             self.checkMessage = "No failed replication jobs on {}".format(self.options.node)
             self.checkResult = NagiosState.OK
+
+        if len(performance_data) > 0:
+            for metric in performance_data:
+                self.addPerfdata('duration_' + metric['id'], metric['duration'], unit='s')
 
     def checkServices(self):
         url = self.getURL('nodes/{}/services'.format(self.options.node))
@@ -410,6 +423,9 @@ class CheckPVE:
 
         check_opts.add_argument('--name', dest='name',
                                 help='Name of storage or vm')
+
+        check_opts.add_argument('--vmid', dest='vmid',
+                                help='ID of virtual machine or container')
 
         check_opts.add_argument('--ignore-service', dest='ignore_services', action='append', metavar='NAME',
                                 help='Ignore service NAME in checks', default=[])
