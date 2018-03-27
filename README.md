@@ -74,13 +74,13 @@ OK - Cluster 'proxmox1' is healthy'
 **Check CPU load**
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m memory -n node1
-OK - CPU usage is 2.4%|usage=2.4%;;
+OK - Memory usage is 37.44%|usage=37.44%;; used=96544.72MB;;;257867.91
 ```
 
 **Check memory usage**
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m cpu -n node1
-OK - Memory usage is 25.55%|usage=25.55%;; used=49415.93MB;;;193403.4
+OK - CPU usage is 2.4%|usage=2.4%;;
 ```
 
 **Check storage usage**
