@@ -162,15 +162,21 @@ class CheckPVE:
                     self.checkMessage = "VM '{}' not running".format(name)
                     self.checkResult = NagiosState.CRITICAL
                     break
+                else:
+                    if self.options.node and self.options.node != vm['node']:
+                        self.checkMessage = "VM '{}' is running on node '{}' instead of '{}'".format(name, vm['node'],
+                                                                                                   self.options.node)
+                        self.checkResult = NagiosState.WARNING
+                    else:
+                        self.checkMessage = "VM '{}' is running on node '{}'".format(name, vm['node'])
 
-                metrics['cpu'] = round(vm['cpu'] * 100, 2)
-                metrics['memory'] = self.getValue(vm['mem'], vm['maxmem'])
-                break
+                    metrics['cpu'] = round(vm['cpu'] * 100, 2)
+                    metrics['memory'] = self.getValue(vm['mem'], vm['maxmem'])
+                    break
 
         if metrics:
             for (metric, value) in metrics.items():
                 self.addPerfdata(metric, value)
-            self.checkMessage = "VM '{}' is running".format(name)
         else:
             self.checkMessage = "VM '{}' not found".format(name)
             self.checkResult = NagiosState.WARNING

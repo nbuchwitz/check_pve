@@ -116,5 +116,3 @@ Verify that your DNS server is working and can resolve your hostname. If everyth
 ## Contributors
 
 * Alexey Kukushkin ([meshok0](https://github.com/meshok0))
-
-
