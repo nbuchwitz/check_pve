@@ -51,7 +51,7 @@ API Options:
 Check Options:
   -m {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,replication}, --mode {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,replication}
                         Mode to use.
-  -n NODE, --node NODE  Node to check (necessary for all modes except cluster)
+  -n NODE, --node NODE  Node to check (necessary for all modes except cluster and vm)
   --name NAME           Name of storage or vm
   --ignore-service NAME
                         Ignore service NAME in checks
@@ -87,6 +87,9 @@ OK - CPU usage is 2.4%|usage=2.4%;;
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m storage -n node1 --name local
 OK - Storage usage is 54.23%|usage=54.23%;; used=128513.11MB;;;236980.36
+
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m storage -n node1 --name vms-disx
+CRITICAL - Storage 'vms-disx' doesn't exist on node 'node01'
 ```
 
 **Check subscription status**
@@ -96,9 +99,20 @@ OK - Subscription of level 'Community' is valid until 2019-01-09
 ```
 
 **Check VM status**
+
+Without specifying a node name:
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m vm --name test-vm
+OK - VM 'test-vm' is running on 'node1'|cpu=1.85%;; memory=8.33%;;
+```
+
+With a specified node name, the check plugin verifies on which node the VM runs.
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m vm -n node1 --name test-vm
-OK - VM 'test-vm' is running|cpu=1.85%;; memory=8.33%;;
+OK - VM 'test-vm' is running on node 'node1'|cpu=1.85%;; memory=8.33%;;
+
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m vm -n node1 --name test-vm
+WARNING - VM 'test-vm' is running on node 'node2' instead of 'node1'|cpu=1.85%;; memory=8.33%;;
 ```
 
 **Check storage replication status**
