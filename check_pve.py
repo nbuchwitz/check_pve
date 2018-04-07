@@ -299,6 +299,15 @@ class CheckPVE:
             self.checkMessage = 'Cluster is unhealthy - no quorum'
 
     def checkStorage(self, name):
+        # check if storage exists
+        url = self.getURL('nodes/{}/storage'.format(self.options.node))
+        data = self.request(url)
+
+        if not any(s['storage'] == name for s in data):
+            self.checkResult = NagiosState.CRITICAL
+            self.checkMessage = "Storage '{}' doesn't exist on node '{}'".format(name, self.options.node)
+            return
+
         url = self.getURL('nodes/{}/storage/{}/status'.format(self.options.node, name))
         self.checkAPIValue(url, 'Storage usage is')
 
