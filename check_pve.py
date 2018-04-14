@@ -262,9 +262,13 @@ class CheckPVE:
     def checkUpdates(self):
         url = self.getURL('nodes/{}/apt/update'.format(self.options.node))
         count = len(self.request(url))
+
         if (count):
             self.checkResult = NagiosState.WARNING
-            self.checkMessage = "{} pending updates".format(count)
+            msg = "{} pending update"
+            if count > 1:
+                msg += "s"
+            self.checkMessage = msg.format(count)
         else:
             self.checkMessage = "System up to date"
 
