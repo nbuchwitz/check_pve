@@ -151,27 +151,28 @@ class CheckPVE:
 
         self.checkTresholds(value, message)
 
-    def checkVMStatus(self, name):
+    def checkVMStatus(self, idx):
         url = self.getURL('cluster/resources', )
         data = self.request(url, params={'type': 'vm'})
 
         found = False
         metrics = {}
         for vm in data:
-            if vm['name'] == name:
+            if vm['name'] == idx or vm['vmid'] == idx:
                 if (vm['status'] != 'running'):
-                    self.checkMessage = "VM '{}' not running".format(name)
+                    self.checkMessage = "VM '{}' not running".format(vm['name'])
                     if (not self.options.ignore_vm_status):
                         self.checkResult = NagiosState.CRITICAL
                     found = True
                     break
                 else:
                     if self.options.node and self.options.node != vm['node']:
-                        self.checkMessage = "VM '{}' is running on node '{}' instead of '{}'".format(name, vm['node'],
+                        self.checkMessage = "VM '{}' is running on node '{}' instead of '{}'".format(vm['name'],
+                                                                                                     vm['node'],
                                                                                                      self.options.node)
                         self.checkResult = NagiosState.WARNING
                     else:
-                        self.checkMessage = "VM '{}' is running on node '{}'".format(name, vm['node'])
+                        self.checkMessage = "VM '{}' is running on node '{}'".format(vm['name'], vm['node'])
 
                     metrics['cpu'] = round(vm['cpu'] * 100, 2)
                     metrics['memory'] = self.getValue(vm['mem'], vm['maxmem'])
@@ -182,7 +183,7 @@ class CheckPVE:
             for (metric, value) in metrics.items():
                 self.addPerfdata(metric, value)
         elif not found:
-            self.checkMessage = "VM '{}' not found".format(name)
+            self.checkMessage = "VM '{}' not found".format(idx)
             self.checkResult = NagiosState.WARNING
 
     def checkReplication(self, name):
@@ -412,7 +413,10 @@ class CheckPVE:
             elif self.options.mode == 'storage':
                 self.checkStorage(self.options.name)
             elif self.options.mode == 'vm':
-                self.checkVMStatus(self.options.name)
+                if (self.options.name):
+                    self.checkVMStatus(self.options.name)
+                else:
+                    self.checkVMStatus(self.options.vmid)
             elif self.options.mode == 'replication':
                 self.checkReplication(self.options.name)
             else:
@@ -447,7 +451,7 @@ class CheckPVE:
         check_opts.add_argument('--name', dest='name',
                                 help='Name of storage or vm')
 
-        check_opts.add_argument('--vmid', dest='vmid',
+        check_opts.add_argument('--vmid', dest='vmid', type=int,
                                 help='ID of virtual machine or container')
 
         check_opts.add_argument('--ignore-vm-status', dest='ignore_vm_status', action='store_true',
@@ -468,12 +472,17 @@ class CheckPVE:
 
         if not options.node and options.mode not in ['cluster', 'vm']:
             p.print_usage()
-            message = "{}: error: --mode {} requires node name".format(p.prog, options.mode)
+            message = "{}: error: --mode {} requires node name (--node)".format(p.prog, options.mode)
             self.output(NagiosState.UNKNOWN, message)
 
-        if not options.name and options.mode in ['storage', 'vm']:
+        if (not options.vmid or options.name) and options.mode == 'vm':
             p.print_usage()
-            message = "{}: error: --mode {} requires --name".format(p.prog, options.mode)
+            message = "{}: error: --mode {} requires vm name (--name) or id (--vmid)".format(p.prog, options.mode)
+            self.output(NagiosState.UNKNOWN, message)
+
+        if not options.name and options.mode == 'storage':
+            p.print_usage()
+            message = "{}: error: --mode {} requires storage name (--name)".format(p.prog, options.mode)
             self.output(NagiosState.UNKNOWN, message)
 
         if options.treshold_warning and options.treshold_critical and options.treshold_critical <= options.treshold_warning:
