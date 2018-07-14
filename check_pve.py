@@ -155,29 +155,32 @@ class CheckPVE:
         url = self.getURL('cluster/resources', )
         data = self.request(url, params={'type': 'vm'})
 
+        found = False
         metrics = {}
         for vm in data:
             if vm['name'] == name:
                 if (vm['status'] != 'running'):
                     self.checkMessage = "VM '{}' not running".format(name)
                     self.checkResult = NagiosState.CRITICAL
+                    found = True
                     break
                 else:
                     if self.options.node and self.options.node != vm['node']:
                         self.checkMessage = "VM '{}' is running on node '{}' instead of '{}'".format(name, vm['node'],
-                                                                                                   self.options.node)
+                                                                                                     self.options.node)
                         self.checkResult = NagiosState.WARNING
                     else:
                         self.checkMessage = "VM '{}' is running on node '{}'".format(name, vm['node'])
 
                     metrics['cpu'] = round(vm['cpu'] * 100, 2)
                     metrics['memory'] = self.getValue(vm['mem'], vm['maxmem'])
+                    found = True
                     break
 
         if metrics:
             for (metric, value) in metrics.items():
                 self.addPerfdata(metric, value)
-        else:
+        elif not found:
             self.checkMessage = "VM '{}' not found".format(name)
             self.checkResult = NagiosState.WARNING
 
