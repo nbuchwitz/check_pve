@@ -41,6 +41,17 @@ except ImportError as e:
     print("Missing python module: {}".format(e.message))
     sys.exit(255)
 
+try:
+    dict.iteritems
+except AttributeError:
+    # Python 3
+    def iteritems(d):
+        return iter(d.items())
+else:
+    # Python 2
+    def iteritems(d):
+        return d.iteritems()
+
 
 class NagiosState(Enum):
     OK = 0
@@ -296,7 +307,7 @@ class CheckPVE:
             self.checkMessage = 'No cluster configuration found'
         elif quorate:
             nodeCount = len(nodes)
-            nodesOnlineCount = len({k: v for k, v in nodes.iteritems() if v})
+            nodesOnlineCount = len({k: v for k, v in iteritems(nodes) if v})
 
             if nodeCount > nodesOnlineCount:
                 diff = nodeCount - nodesOnlineCount
