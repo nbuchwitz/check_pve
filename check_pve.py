@@ -128,7 +128,7 @@ class CheckPVE:
         result = self.request(url)
         used = None
 
-        if kwargs.has_key('key'):
+        if 'key' in kwargs:
             result = result[kwargs.get('key')]
 
         if isinstance(result, (dict,)):
@@ -151,7 +151,7 @@ class CheckPVE:
 
         self.checkTresholds(value, message)
 
-    def checkVMStatus(self, idx):
+    def checkVMStatus(self, idx, expected_state='running'):
         url = self.getURL('cluster/resources', )
         data = self.request(url, params={'type': 'vm'})
 
@@ -159,23 +159,25 @@ class CheckPVE:
         metrics = {}
         for vm in data:
             if vm['name'] == idx or vm['vmid'] == idx:
-                if (vm['status'] != 'running'):
-                    self.checkMessage = "VM '{}' not running".format(vm['name'])
+                if vm['status'] != expected_state:
+                    self.checkMessage = "VM '{}' is not {}".format(vm['name'], expected_state)
                     if (not self.options.ignore_vm_status):
                         self.checkResult = NagiosState.CRITICAL
                     found = True
                     break
                 else:
                     if self.options.node and self.options.node != vm['node']:
-                        self.checkMessage = "VM '{}' is running on node '{}' instead of '{}'".format(vm['name'],
-                                                                                                     vm['node'],
-                                                                                                     self.options.node)
+                        self.checkMessage = "VM '{}' is {}, but located on node '{}' instead of '{}'" \
+                            .format(vm['name'], expected_state, vm['node'], self.options.node)
                         self.checkResult = NagiosState.WARNING
                     else:
-                        self.checkMessage = "VM '{}' is running on node '{}'".format(vm['name'], vm['node'])
+                        self.checkMessage = "VM '{}' on node '{}' is {}" \
+                            .format(vm['name'], vm['node'], expected_state)
 
-                    metrics['cpu'] = round(vm['cpu'] * 100, 2)
-                    metrics['memory'] = self.getValue(vm['mem'], vm['maxmem'])
+                    if vm['status'] == 'running':
+                        metrics['cpu'] = round(vm['cpu'] * 100, 2)
+                        metrics['memory'] = self.getValue(vm['mem'], vm['maxmem'])
+
                     found = True
                     break
 
@@ -187,7 +189,6 @@ class CheckPVE:
             self.checkResult = NagiosState.WARNING
 
     def checkReplication(self, name):
-        data = None
         url = self.getURL('nodes/{}/replication'.format(self.options.node))
 
         if self.options.vmid:
@@ -268,7 +269,7 @@ class CheckPVE:
         url = self.getURL('nodes/{}/apt/update'.format(self.options.node))
         count = len(self.request(url))
 
-        if (count):
+        if count:
             self.checkResult = NagiosState.WARNING
             msg = "{} pending update"
             if count > 1:
@@ -413,10 +414,15 @@ class CheckPVE:
             elif self.options.mode == 'storage':
                 self.checkStorage(self.options.name)
             elif self.options.mode == 'vm':
-                if (self.options.name):
-                    self.checkVMStatus(self.options.name)
+                if self.options.name:
+                    idx = self.options.name
                 else:
-                    self.checkVMStatus(self.options.vmid)
+                    idx = self.options.vmid
+
+                if self.options.expected_vm_status:
+                    self.checkVMStatus(idx, self.options.expected_vm_status)
+                else:
+                    self.checkVMStatus(idx)
             elif self.options.mode == 'replication':
                 self.checkReplication(self.options.name)
             else:
@@ -454,6 +460,8 @@ class CheckPVE:
         check_opts.add_argument('--vmid', dest='vmid', type=int,
                                 help='ID of virtual machine or container')
 
+        check_opts.add_argument('--expected-vm-status', choices=('running', 'stopped'), help='Expected VM status')
+
         check_opts.add_argument('--ignore-vm-status', dest='ignore_vm_status', action='store_true',
                                 help='Ignore VM status in checks',
                                 default=False)
@@ -475,9 +483,10 @@ class CheckPVE:
             message = "{}: error: --mode {} requires node name (--node)".format(p.prog, options.mode)
             self.output(NagiosState.UNKNOWN, message)
 
-        if (not options.vmid or options.name) and options.mode == 'vm':
+        if not options.vmid and not options.name and options.mode == 'vm':
             p.print_usage()
-            message = "{}: error: --mode {} requires vm name (--name) or id (--vmid)".format(p.prog, options.mode)
+            message = "{}: error: --mode {} requires either vm name (--name) or id (--vmid)".format(p.prog,
+                                                                                                    options.mode)
             self.output(NagiosState.UNKNOWN, message)
 
         if not options.name and options.mode == 'storage':

@@ -30,9 +30,10 @@ The ``icinga2`` folder contains the command defintion and service examples for u
 ```
 usage: check_pve.py [-h] -e API_ENDPOINT -u API_USER -p API_PASSWORD [-k] -m
                     {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,replication}
-                    [-n NODE] [--name NAME] [--vmid VMID] [--ignore-vm-status]
-                    [--ignore-service NAME] [-w TRESHOLD_WARNING]
-                    [-c TRESHOLD_CRITICAL] [-M]
+                    [-n NODE] [--name NAME] [--vmid VMID]
+                    [--expected-vm-status {running,stopped}]
+                    [--ignore-vm-status] [--ignore-service NAME]
+                    [-w TRESHOLD_WARNING] [-c TRESHOLD_CRITICAL] [-M]
 
 Check command for PVE hosts via API
 
@@ -55,6 +56,8 @@ Check Options:
   -n NODE, --node NODE  Node to check (necessary for all modes except cluster)
   --name NAME           Name of storage or vm
   --vmid VMID           ID of virtual machine or container
+  --expected-vm-status {running,stopped}
+                        Expected VM status
   --ignore-vm-status    Ignore VM status in checks
   --ignore-service NAME
                         Ignore service NAME in checks
@@ -64,7 +67,6 @@ Check Options:
                         Critical treshold for check value
   -M                    Values are shown in MB (if available). Tresholds are
                         also treated as MB values
-
 ```
 
 ## Examples
@@ -124,6 +126,14 @@ If you only want to gather metrics and don't care about the vm status add the ``
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m vm --name test-vm --ignore-vm-status
 OK - VM 'test-vm' is not running
+```
+
+Specify the expected VM status:
+
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m vm --name test-vm --expected-vm-status stopped
+OK - VM 'test-vm' is not running
+
 ```
 
 **Check storage replication status**
