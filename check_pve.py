@@ -161,7 +161,8 @@ class CheckPVE:
             if vm['name'] == name:
                 if (vm['status'] != 'running'):
                     self.checkMessage = "VM '{}' not running".format(name)
-                    self.checkResult = NagiosState.CRITICAL
+                    if (not self.options.ignore_vm_status):
+                        self.checkResult = NagiosState.CRITICAL
                     found = True
                     break
                 else:
@@ -448,6 +449,10 @@ class CheckPVE:
 
         check_opts.add_argument('--vmid', dest='vmid',
                                 help='ID of virtual machine or container')
+
+        check_opts.add_argument('--ignore-vm-status', dest='ignore_vm_status', action='store_true',
+                                help='Ignore VM status in checks',
+                                default=False)
 
         check_opts.add_argument('--ignore-service', dest='ignore_services', action='append', metavar='NAME',
                                 help='Ignore service NAME in checks', default=[])
