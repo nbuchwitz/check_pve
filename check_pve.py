@@ -171,7 +171,7 @@ class CheckPVE:
         for vm in data:
             if vm['name'] == idx or vm['vmid'] == idx:
                 if vm['status'] != expected_state:
-                    self.checkMessage = "VM '{}' is not {}".format(vm['name'], expected_state)
+                    self.checkMessage = "VM '{}' is {} (expected: {})".format(vm['name'], vm['status'], expected_state)
                     if (not self.options.ignore_vm_status):
                         self.checkResult = NagiosState.CRITICAL
                     found = True
@@ -471,7 +471,7 @@ class CheckPVE:
         check_opts.add_argument('--vmid', dest='vmid', type=int,
                                 help='ID of virtual machine or container')
 
-        check_opts.add_argument('--expected-vm-status', choices=('running', 'stopped'), help='Expected VM status')
+        check_opts.add_argument('--expected-vm-status', choices=('running', 'stopped', 'paused'), help='Expected VM status')
 
         check_opts.add_argument('--ignore-vm-status', dest='ignore_vm_status', action='store_true',
                                 help='Ignore VM status in checks',
