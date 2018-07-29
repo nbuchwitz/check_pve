@@ -31,7 +31,7 @@ The ``icinga2`` folder contains the command defintion and service examples for u
 usage: check_pve.py [-h] -e API_ENDPOINT -u API_USER -p API_PASSWORD [-k] -m
                     {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,replication}
                     [-n NODE] [--name NAME] [--vmid VMID]
-                    [--expected-vm-status {running,stopped}]
+                    [--expected-vm-status {running,stopped,paused}]
                     [--ignore-vm-status] [--ignore-service NAME]
                     [-w TRESHOLD_WARNING] [-c TRESHOLD_CRITICAL] [-M]
 
