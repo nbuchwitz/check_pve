@@ -199,6 +199,27 @@ class CheckPVE:
             self.checkMessage = "VM '{}' not found".format(idx)
             self.checkResult = NagiosState.WARNING
 
+    def checkDisks(self):
+        url = self.getURL('nodes/{}/disks'.format(self.options.node))
+
+        failed = []
+        disks = self.request(url + '/list')
+        for disk in disks:
+            name = disk['devpath'].replace('/dev/', '')
+            if disk['health'] != 'PASSED':
+                self.checkResult = NagiosState.WARNING
+                failed.append({"serial": disk["serial"], "device": disk['devpath']})
+
+            if disk['wearout'] != 'N/A':
+                self.addPerfdata('wearout_{}'.format(name), disk['wearout'])
+
+        if failed:
+            self.checkMessage = "The following disks failed the health test:\n"
+            for disk in failed:
+                self.checkMessage += "  {} with serial '{}'\n".format(disk['device'], disk['serial'])
+        else:
+            self.checkMessage = "All disks are healthy"
+
     def checkReplication(self, name):
         url = self.getURL('nodes/{}/replication'.format(self.options.node))
 
@@ -414,6 +435,8 @@ class CheckPVE:
                 self.checkMemory()
             elif self.options.mode == 'io_wait':
                 self.checkIOWait()
+            elif self.options.mode == 'disk-health':
+                self.checkDisks()
             elif self.options.mode == 'cpu':
                 self.checkCPU()
             elif self.options.mode == 'services':
@@ -458,7 +481,7 @@ class CheckPVE:
 
         check_opts.add_argument("-m", "--mode",
                                 choices=('cluster', 'cpu', 'memory', 'storage', 'io_wait', 'updates', 'services',
-                                         'subscription', 'vm', 'replication'),
+                                         'subscription', 'vm', 'replication', 'disk-health'),
                                 required=True,
                                 help="Mode to use.")
 
@@ -471,7 +494,8 @@ class CheckPVE:
         check_opts.add_argument('--vmid', dest='vmid', type=int,
                                 help='ID of virtual machine or container')
 
-        check_opts.add_argument('--expected-vm-status', choices=('running', 'stopped', 'paused'), help='Expected VM status')
+        check_opts.add_argument('--expected-vm-status', choices=('running', 'stopped', 'paused'),
+                                help='Expected VM status')
 
         check_opts.add_argument('--ignore-vm-status', dest='ignore_vm_status', action='store_true',
                                 help='Ignore VM status in checks',

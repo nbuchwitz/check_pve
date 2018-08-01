@@ -51,7 +51,7 @@ API Options:
   -k, --insecure        Don't verify HTTPS certificate
 
 Check Options:
-  -m {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,replication}, --mode {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,replication}
+  -m {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,replication,disk-health}, --mode {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,replication,disk-health}
                         Mode to use.
   -n NODE, --node NODE  Node to check (necessary for all modes except cluster)
   --name NAME           Name of storage or vm
@@ -87,6 +87,12 @@ OK - Memory usage is 37.44%|usage=37.44%;; used=96544.72MB;;;257867.91
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m cpu -n node1
 OK - CPU usage is 2.4%|usage=2.4%;;
+```
+
+**Check disk-health**
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m disk-health -n node1
+OK - All disks are healthy|wearout_sdb=96%;; wearout_sdc=96%;; wearout_sdd=96%;; wearout_sde=96%;;
 ```
 
 **Check storage usage**
