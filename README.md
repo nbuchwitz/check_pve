@@ -29,11 +29,12 @@ The ``icinga2`` folder contains the command defintion and service examples for u
 
 ```
 usage: check_pve.py [-h] -e API_ENDPOINT -u API_USER -p API_PASSWORD [-k] -m
-                    {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,replication}
+                    {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,replication,disk-health}
                     [-n NODE] [--name NAME] [--vmid VMID]
                     [--expected-vm-status {running,stopped,paused}]
                     [--ignore-vm-status] [--ignore-service NAME]
-                    [-w TRESHOLD_WARNING] [-c TRESHOLD_CRITICAL] [-M]
+                    [--ignore-disk NAME] [-w TRESHOLD_WARNING]
+                    [-c TRESHOLD_CRITICAL] [-M]
 
 Check command for PVE hosts via API
 
@@ -51,16 +52,17 @@ API Options:
   -k, --insecure        Don't verify HTTPS certificate
 
 Check Options:
-  -m {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,replication,disk-health}, --mode {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,replication,disk-health}
+  -m {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,replication,disk-health}
                         Mode to use.
   -n NODE, --node NODE  Node to check (necessary for all modes except cluster)
   --name NAME           Name of storage or vm
   --vmid VMID           ID of virtual machine or container
-  --expected-vm-status {running,stopped}
+  --expected-vm-status {running,stopped,paused}
                         Expected VM status
   --ignore-vm-status    Ignore VM status in checks
   --ignore-service NAME
                         Ignore service NAME in checks
+  --ignore-disk NAME    Ignore disk NAME in health check
   -w TRESHOLD_WARNING, --warning TRESHOLD_WARNING
                         Warning treshold for check value
   -c TRESHOLD_CRITICAL, --critical TRESHOLD_CRITICAL
