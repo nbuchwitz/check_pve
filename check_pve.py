@@ -206,7 +206,11 @@ class CheckPVE:
         disks = self.request(url + '/list')
         for disk in disks:
             name = disk['devpath'].replace('/dev/', '')
-            if disk['health'] != 'PASSED':
+
+            if name in self.options.ignore_disks:
+                continue
+
+            if disk['health'] not in ('PASSED', 'OK'):
                 self.checkResult = NagiosState.WARNING
                 failed.append({"serial": disk["serial"], "device": disk['devpath']})
 
@@ -503,6 +507,9 @@ class CheckPVE:
 
         check_opts.add_argument('--ignore-service', dest='ignore_services', action='append', metavar='NAME',
                                 help='Ignore service NAME in checks', default=[])
+
+        check_opts.add_argument('--ignore-disk', dest='ignore_disks', action='append', metavar='NAME',
+                                help='Ignore disk NAME in health check', default=[])
 
         check_opts.add_argument('-w', '--warning', dest='treshold_warning', type=float,
                                 help='Warning treshold for check value')
