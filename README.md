@@ -81,14 +81,14 @@ OK - Cluster 'proxmox1' is healthy'
 
 **Check CPU load**
 ```
-./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m memory -n node1
-OK - Memory usage is 37.44%|usage=37.44%;; used=96544.72MB;;;257867.91
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m cpu -n node1
+OK - CPU usage is 2.4%|usage=2.4%;;
 ```
 
 **Check memory usage**
 ```
-./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m cpu -n node1
-OK - CPU usage is 2.4%|usage=2.4%;;
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m memory -n node1
+OK - Memory usage is 37.44%|usage=37.44%;; used=96544.72MB;;;257867.91
 ```
 
 **Check disk-health**
@@ -130,14 +130,12 @@ WARNING - VM 'test-vm' is running on node 'node2' instead of 'node1'|cpu=1.85%;;
 ```
 
 If you only want to gather metrics and don't care about the vm status add the ``--ignore-vm-status`` flag:
-
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m vm --name test-vm --ignore-vm-status
 OK - VM 'test-vm' is not running
 ```
 
 Specify the expected VM status:
-
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m vm --name test-vm --expected-vm-status stopped
 OK - VM 'test-vm' is not running
