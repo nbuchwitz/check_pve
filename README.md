@@ -1,7 +1,9 @@
 # check_pve
 Icinga check command for Proxmox VE via API
 
-## Requirements
+## Setup
+
+### Requirements
 
 This check command depends on the following python modules:
  * enum
@@ -22,6 +24,31 @@ yum install python-argparse python-enum34 python34-requests
 ```
 yum install python-enum34 python-requests
 ```
+
+### Create a API user in Proxmox VE
+
+Create a role named ``Monitoring`` and assign neccesarry privileges:
+
+```
+pveum roleadd Monitoring
+pveum rolemod Monitoring --privs Sys.Modify,VM.Monitor,Sys.Audit,Datastore.Audit,VM.Audit
+```
+
+Create a user named ``monitoring`` and set password:
+
+```
+pveum useradd monitoring@pve --comment "The ICINGA 2 monitoring user"
+pveum passwd monitoring@pve
+```
+
+Assign ``monitoring`` role to user ``monitoring``
+
+```
+pveum aclmod / -user monitoring@pve -role Monitoring
+```
+
+For further information about the Proxmox VE privilege system have a look into the [documentation](https://pve.proxmox.com/pve-docs/pve-admin-guide.html#_strong_pveum_strong_proxmox_ve_user_manager).
+
 
 ## Usage
 
