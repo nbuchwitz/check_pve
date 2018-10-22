@@ -162,9 +162,12 @@ class CheckPVE:
 
         self.checkTresholds(value, message)
 
-    def checkVMStatus(self, idx, expected_state='running'):
+    def checkVMStatus(self, idx, **kwargs):
         url = self.getURL('cluster/resources', )
         data = self.request(url, params={'type': 'vm'})
+
+        expected_state = kwargs.get("expected_state", "running")
+        only_status = kwargs.get("only_status", False)
 
         found = False
         metrics = {}
@@ -172,10 +175,8 @@ class CheckPVE:
             if vm['name'] == idx or vm['vmid'] == idx:
                 if vm['status'] != expected_state:
                     self.checkMessage = "VM '{}' is {} (expected: {})".format(vm['name'], vm['status'], expected_state)
-                    if (not self.options.ignore_vm_status):
+                    if not self.options.ignore_vm_status:
                         self.checkResult = NagiosState.CRITICAL
-                    found = True
-                    break
                 else:
                     if self.options.node and self.options.node != vm['node']:
                         self.checkMessage = "VM '{}' is {}, but located on node '{}' instead of '{}'" \
@@ -185,12 +186,12 @@ class CheckPVE:
                         self.checkMessage = "VM '{}' on node '{}' is {}" \
                             .format(vm['name'], vm['node'], expected_state)
 
-                    if vm['status'] == 'running':
-                        metrics['cpu'] = round(vm['cpu'] * 100, 2)
-                        metrics['memory'] = self.getValue(vm['mem'], vm['maxmem'])
+                if vm['status'] == 'running' and not only_status:
+                    metrics['cpu'] = round(vm['cpu'] * 100, 2)
+                    metrics['memory'] = self.getValue(vm['mem'], vm['maxmem'])
 
-                    found = True
-                    break
+                found = True
+                break
 
         if metrics:
             for (metric, value) in metrics.items():
@@ -451,16 +452,18 @@ class CheckPVE:
                 self.checkSubscription()
             elif self.options.mode == 'storage':
                 self.checkStorage(self.options.name)
-            elif self.options.mode == 'vm':
+            elif self.options.mode in ['vm', 'vm_status']:
+                only_status = self.options.mode == 'vm_status'
+
                 if self.options.name:
                     idx = self.options.name
                 else:
                     idx = self.options.vmid
 
                 if self.options.expected_vm_status:
-                    self.checkVMStatus(idx, self.options.expected_vm_status)
+                    self.checkVMStatus(idx, expected_state=self.options.expected_vm_status, only_status=only_status)
                 else:
-                    self.checkVMStatus(idx)
+                    self.checkVMStatus(idx, only_status=only_status)
             elif self.options.mode == 'replication':
                 self.checkReplication(self.options.name)
             else:
@@ -485,7 +488,7 @@ class CheckPVE:
 
         check_opts.add_argument("-m", "--mode",
                                 choices=('cluster', 'cpu', 'memory', 'storage', 'io_wait', 'updates', 'services',
-                                         'subscription', 'vm', 'replication', 'disk-health'),
+                                         'subscription', 'vm','vm_status', 'replication', 'disk-health'),
                                 required=True,
                                 help="Mode to use.")
 

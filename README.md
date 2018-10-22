@@ -79,7 +79,7 @@ API Options:
   -k, --insecure        Don't verify HTTPS certificate
 
 Check Options:
-  -m {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,replication,disk-health}
+  -m {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health}
                         Mode to use.
   -n NODE, --node NODE  Node to check (necessary for all modes except cluster)
   --name NAME           Name of storage or vm
@@ -168,6 +168,8 @@ Specify the expected VM status:
 OK - VM 'test-vm' is not running
 
 ```
+
+For hostalive checks use ``vm_status`` instead of ``vm``. The parameters are the same as with ``vm``.
 
 **Check storage replication status**
 ```
