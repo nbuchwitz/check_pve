@@ -5,7 +5,7 @@
 # check_pve.py - A check plugin for Proxmox Virtual Environment (PVE).
 # Copyright (C) 2018  Nicolai Buchwitz <nb@tipi-net.de>
 #
-# Version: 1.1.0
+# Version: 1.1.2
 #
 # ------------------------------------------------------------------------------
 # This program is free software; you can redistribute it and/or
@@ -61,7 +61,7 @@ class NagiosState(Enum):
 
 
 class CheckPVE:
-    VERSION = '1.1.0'
+    VERSION = '1.1.2'
     API_URL = 'https://{}:8006/api2/json/{}'
 
     options = {}
