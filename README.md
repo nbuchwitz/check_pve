@@ -169,7 +169,7 @@ OK - VM 'test-vm' is not running
 
 ```
 
-For hostalive checks use ``vm_status`` instead of ``vm``. The parameters are the same as with ``vm``.
+For hostalive checks without gathering performance data use ``vm_status`` instead of ``vm``. The parameters are the same as with ``vm``.
 
 **Check storage replication status**
 ```
