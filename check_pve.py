@@ -539,8 +539,11 @@ class CheckPVE:
             message = "{}: error: --mode {} requires storage name (--name)".format(p.prog, options.mode)
             self.output(NagiosState.UNKNOWN, message)
 
-        if options.treshold_warning and options.treshold_critical and options.treshold_critical <= options.treshold_warning:
-            p.error("Critical value must be greater than warning value")
+        if options.treshold_warning and options.treshold_critical:
+            if options.mode != 'subscription' and options.treshold_critical <= options.treshold_warning:
+                p.error("Critical value must be greater than warning value")
+            elif options.treshold_critical >= options.treshold_warning:
+                p.error("Critical value must be lower than warning value")
 
         self.options = options
 
