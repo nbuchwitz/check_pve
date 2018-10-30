@@ -153,7 +153,7 @@ class CheckPVE:
             used_percent = round(float(result) * 100, 2)
             self.addPerfdata(kwargs.get('perfkey', 'usage'), used_percent)
 
-        if (self.options.values_mb):
+        if self.options.values_mb:
             message += ' {}{}'.format(used, 'MB')
             value = used
         else:
@@ -170,7 +170,6 @@ class CheckPVE:
         only_status = kwargs.get("only_status", False)
 
         found = False
-        metrics = {}
         for vm in data:
             if vm['name'] == idx or vm['vmid'] == idx:
                 if vm['status'] != expected_state:
@@ -187,16 +186,22 @@ class CheckPVE:
                             .format(vm['name'], vm['node'], expected_state)
 
                 if vm['status'] == 'running' and not only_status:
-                    metrics['cpu'] = round(vm['cpu'] * 100, 2)
-                    metrics['memory'] = self.getValue(vm['mem'], vm['maxmem'])
+                    self.addPerfdata("cpu", round(vm['cpu'] * 100, 2))
+
+                    if self.options.values_mb:
+                        memory = vm['mem'] /1024/1024
+                        self.addPerfdata("memory", memory, unit="MB", max=vm['maxmem']/1024/1024)
+
+                    else:
+                        memory = self.getValue(vm['mem'], vm['maxmem'])
+                        self.addPerfdata("memory", memory)
+
+                    self.checkTresholds(memory, message=self.checkMessage)
 
                 found = True
                 break
 
-        if metrics:
-            for (metric, value) in metrics.items():
-                self.addPerfdata(metric, value)
-        elif not found:
+        if not found:
             self.checkMessage = "VM '{}' not found".format(idx)
             self.checkResult = NagiosState.WARNING
 

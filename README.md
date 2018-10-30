@@ -135,7 +135,7 @@ CRITICAL - Storage 'vms-disx' doesn't exist on node 'node01'
 
 **Check subscription status**
 ```
-./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m subscription -n node1
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m subscription -n node1 -w 50 -c 10
 OK - Subscription of level 'Community' is valid until 2019-01-09
 ```
 
@@ -145,6 +145,12 @@ Without specifying a node name:
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m vm --name test-vm
 OK - VM 'test-vm' is running on 'node1'|cpu=1.85%;; memory=8.33%;;
+```
+
+With memory thresholds:
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m vm --name test-vm -w 50 -c 80
+OK - VM 'test-vm' is running on 'node1'|cpu=1.85%;; memory=40.33%;50.0;80.0
 ```
 
 With a specified node name, the check plugin verifies on which node the VM runs.
