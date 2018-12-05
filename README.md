@@ -27,7 +27,7 @@ yum install python-enum34 python-requests
 
 **Installation on FreeBSD**
 ```
-yum install py36-requests
+pkg install py36-requests
 ```
 
 
