@@ -421,7 +421,7 @@ class CheckPVE:
         else:
             perfdata += ';'
 
-        if (kwargs.has_key('max')):
+        if ('max' in kwargs):
             perfdata += ';{}'.format(kwargs.get('max'))
 
         self.perfdata.append(perfdata)

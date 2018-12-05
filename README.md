@@ -25,6 +25,12 @@ yum install python-argparse python-enum34 python34-requests
 yum install python-enum34 python-requests
 ```
 
+**Installation on FreeBSD**
+```
+yum install py36-requests
+```
+
+
 ### Create a API user in Proxmox VE
 
 Create a role named ``Monitoring`` and assign neccesarry privileges:
