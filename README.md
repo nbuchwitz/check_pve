@@ -62,12 +62,12 @@ The ``icinga2`` folder contains the command defintion and service examples for u
 
 ```
 usage: check_pve.py [-h] -e API_ENDPOINT -u API_USER -p API_PASSWORD [-k] -m
-                    {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,replication,disk-health}
+                    {cluster,version,cpu,memory,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health}
                     [-n NODE] [--name NAME] [--vmid VMID]
                     [--expected-vm-status {running,stopped,paused}]
                     [--ignore-vm-status] [--ignore-service NAME]
                     [--ignore-disk NAME] [-w TRESHOLD_WARNING]
-                    [-c TRESHOLD_CRITICAL] [-M]
+                    [-c TRESHOLD_CRITICAL] [-M] [-V MIN_VERSION]
 
 Check command for PVE hosts via API
 
@@ -85,9 +85,10 @@ API Options:
   -k, --insecure        Don't verify HTTPS certificate
 
 Check Options:
-  -m {cluster,cpu,memory,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health}
+  -m {cluster,version,cpu,memory,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health}, --mode {cluster,version,cpu,memory,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health}
                         Mode to use.
-  -n NODE, --node NODE  Node to check (necessary for all modes except cluster)
+  -n NODE, --node NODE  Node to check (necessary for all modes except cluster
+                        and version)
   --name NAME           Name of storage or vm
   --vmid VMID           ID of virtual machine or container
   --expected-vm-status {running,stopped,paused}
@@ -102,6 +103,9 @@ Check Options:
                         Critical treshold for check value
   -M                    Values are shown in MB (if available). Tresholds are
                         also treated as MB values
+  -V MIN_VERSION, --min-version MIN_VERSION
+                        The minimal pve version to check for. Any version
+                        lower than this will return CRITICAL.
 ```
 
 ## Examples
@@ -110,6 +114,12 @@ Check Options:
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m cluster
 OK - Cluster 'proxmox1' is healthy'
+```
+
+**Check PVE version**
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m version -V 5.0.0
+OK - Your pve instance version '5.2' (0fcd7879) is up to date
 ```
 
 **Check CPU load**
