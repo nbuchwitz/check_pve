@@ -370,7 +370,7 @@ class CheckPVE:
         if not data['version']:
             self.checkResult = NagiosState.UNKNOWN
             self.checkMessage = "Unable to determine pve version"
-        elif LooseVersion(self.options.min_version) >= LooseVersion(data['version']):
+        elif LooseVersion(self.options.min_version) > LooseVersion(data['version']):
             self.checkResult = NagiosState.CRITICAL
             self.checkMessage = "Current pve version '{}' ({}) is lower than the min. required version '{}'".format(data['version'], data['repoid'], self.options.min_version)
         else:
