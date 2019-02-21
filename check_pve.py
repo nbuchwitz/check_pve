@@ -29,6 +29,7 @@ import sys
 try:
     from enum import Enum
     from datetime import datetime
+    from distutils.version import LooseVersion
     import argparse
     import requests
     import urllib3
@@ -363,6 +364,18 @@ class CheckPVE:
         url = self.getURL('nodes/{}/storage/{}/status'.format(self.options.node, name))
         self.checkAPIValue(url, 'Storage usage is')
 
+    def checkVersion(self):
+        url = self.getURL('version')
+        data = self.request(url)
+        if not data['version']:
+            self.checkResult = NagiosState.UNKNOWN
+            self.checkMessage = "Unable to determine pve version"
+        elif LooseVersion(self.options.min_version) >= LooseVersion(data['version']):
+            self.checkResult = NagiosState.CRITICAL
+            self.checkMessage = "Current pve version '{}' ({}) is lower than the min. required version '{}'".format(data['version'], data['repoid'], self.options.min_version)
+        else:
+            self.checkMessage = "Your pve instance version '{}' ({}) is up to date".format(data['version'], data['repoid'])
+
     def checkMemory(self):
         url = self.getURL('nodes/{}/status'.format(self.options.node))
         self.checkAPIValue(url, 'Memory usage is', key='memory')
@@ -441,7 +454,9 @@ class CheckPVE:
         if self.options.mode == 'cluster':
             self.checkClusterStatus()
         else:
-            if self.options.mode == 'memory':
+            if self.options.mode == 'version':
+                self.checkVersion()
+            elif self.options.mode == 'memory':
                 self.checkMemory()
             elif self.options.mode == 'io_wait':
                 self.checkIOWait()
@@ -492,13 +507,13 @@ class CheckPVE:
         check_opts = p.add_argument_group('Check Options')
 
         check_opts.add_argument("-m", "--mode",
-                                choices=('cluster', 'cpu', 'memory', 'storage', 'io_wait', 'updates', 'services',
-                                         'subscription', 'vm','vm_status', 'replication', 'disk-health'),
+                                choices=('cluster', 'version', 'cpu', 'memory', 'storage', 'io_wait', 'updates', 'services',
+                                         'subscription', 'vm', 'vm_status', 'replication', 'disk-health'),
                                 required=True,
                                 help="Mode to use.")
 
         check_opts.add_argument('-n', '--node', dest='node',
-                                help='Node to check (necessary for all modes except cluster)')
+                                help='Node to check (necessary for all modes except cluster and version)')
 
         check_opts.add_argument('--name', dest='name',
                                 help='Name of storage or vm')
@@ -525,10 +540,12 @@ class CheckPVE:
                                 help='Critical treshold for check value')
         check_opts.add_argument('-M', dest='values_mb', action='store_true', default=False,
                                 help='Values are shown in MB (if available). Tresholds are also treated as MB values')
+        check_opts.add_argument('-V', '--min-version', dest='min_version', type=str,
+                                help='The minimal pve version to check for. Any version lower than this will return CRITICAL.')
 
         options = p.parse_args()
 
-        if not options.node and options.mode not in ['cluster', 'vm']:
+        if not options.node and options.mode not in ['cluster', 'vm', 'version']:
             p.print_usage()
             message = "{}: error: --mode {} requires node name (--node)".format(p.prog, options.mode)
             self.output(NagiosState.UNKNOWN, message)
