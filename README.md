@@ -5,35 +5,30 @@ Icinga check command for Proxmox VE via API
 
 ### Requirements
 
-This check command depends on the following python modules:
+This check command depends on **Python 3** and the following modules:
  * enum
  * requests
  * argparse
 
 **Installation on Debian / Ubuntu**
 ```
-apt install python-enum34 python-requests
-```
-
-**Installation on Redhat 6 / CentOS 6**
-```
-yum install python-argparse python-enum34 python34-requests
+apt install python3 python3-requests
 ```
 
 **Installation on Redhat 7 / CentOS 7**
 ```
-yum install python-enum34 python-requests
+yum install python36 python36-requests
 ```
 
 **Installation on FreeBSD**
 ```
-pkg install py36-requests
+pkg install python3 py37-requests
 ```
 
 
 ### Create a API user in Proxmox VE
 
-Create a role named ``Monitoring`` and assign neccesarry privileges:
+Create a role named ``Monitoring`` and assign necessary privileges:
 
 ```
 pveum roleadd Monitoring
@@ -58,10 +53,10 @@ For further information about the Proxmox VE privilege system have a look into t
 
 ## Usage
 
-The ``icinga2`` folder contains the command defintion and service examples for use with Icinga2.
+The ``icinga2`` folder contains the command definition and service examples for use with Icinga2.
 
 ```
-usage: check_pve.py [-h] -e API_ENDPOINT -u API_USER -p API_PASSWORD [-k] -m
+usage: check_pve.py [-h] -e API_ENDPOINT [--api-port API_PORT] -u API_USER -p API_PASSWORD [-k] -m
                     {cluster,version,cpu,memory,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health}
                     [-n NODE] [--name NAME] [--vmid VMID]
                     [--expected-vm-status {running,stopped,paused}]
@@ -77,6 +72,7 @@ optional arguments:
 API Options:
   -e API_ENDPOINT, --api-endpoint API_ENDPOINT
                         PVE api endpoint hostname
+  --api-port API_PORT   PVE api endpoint port
   -u API_USER, --username API_USER
                         PVE api user (e.g. icinga2@pve or icinga2@pam,
                         depending on which backend you have chosen in proxmox)
