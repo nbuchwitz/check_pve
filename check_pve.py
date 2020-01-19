@@ -112,7 +112,8 @@ class CheckPVE:
             if response.status_code == 401:
                 message += "Could not connection to PVE API: invalid username or password"
             elif response.status_code == 403:
-                message += "Access denied. Please check if API user has sufficient permissions."
+                message += "Access denied. Please check if API user has sufficient permissions / the role has been " \
+                           "assigned."
             else:
                 message += "HTTP error code was {}".format(response.status_code)
 
@@ -426,7 +427,7 @@ class CheckPVE:
         else:
             perfdata += ';'
 
-        if ('max' in kwargs):
+        if 'max' in kwargs:
             perfdata += ';{}'.format(kwargs.get('max'))
 
         self.perfdata.append(perfdata)
@@ -434,7 +435,7 @@ class CheckPVE:
     def get_perfdata(self):
         perfdata = ''
 
-        if (len(self.perfdata) > 0):
+        if len(self.perfdata):
             perfdata = '|'
             perfdata += ' '.join(self.perfdata)
 
@@ -493,7 +494,8 @@ class CheckPVE:
         api_opts.add_argument("--api-port", required=False, help="PVE api endpoint port")
 
         api_opts.add_argument("-u", "--username", dest='api_user', required=True,
-                              help="PVE api user (e.g. icinga2@pve or icinga2@pam, depending on which backend you have chosen in proxmox)")
+                              help="PVE api user (e.g. icinga2@pve or icinga2@pam, depending on which backend you "
+                                   "have chosen in proxmox)")
         api_opts.add_argument("-p", "--password", dest='api_password', required=True, help="PVE api user password")
         api_opts.add_argument("-k", "--insecure", dest='api_insecure', action='store_true', default=False,
                               help="Don't verify HTTPS certificate")
@@ -538,7 +540,8 @@ class CheckPVE:
         check_opts.add_argument('-M', dest='values_mb', action='store_true', default=False,
                                 help='Values are shown in MB (if available). Tresholds are also treated as MB values')
         check_opts.add_argument('-V', '--min-version', dest='min_version', type=str,
-                                help='The minimal pve version to check for. Any version lower than this will return CRITICAL.')
+                                help='The minimal pve version to check for. Any version lower than this will return '
+                                     'CRITICAL.')
 
         options = p.parse_args()
 
