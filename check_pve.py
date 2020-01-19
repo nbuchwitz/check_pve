@@ -63,7 +63,7 @@ class NagiosState(Enum):
 
 class CheckPVE:
     VERSION = '1.1.2'
-    API_URL = 'https://{}:8006/api2/json/{}'
+    API_URL = 'https://{hostname}:{port}/api2/json/{command}'
 
     options = {}
     ticket = None
@@ -86,8 +86,8 @@ class CheckPVE:
         print(message)
         sys.exit(returnCode.value)
 
-    def getURL(self, part):
-        return self.API_URL.format(self.options.api_endpoint, part)
+    def getURL(self, command):
+        return self.API_URL.format(hostname=self.options.api_endpoint, command=command, port=self.options.api_port)
 
     def request(self, url, method='get', **kwargs):
         response = None
@@ -190,8 +190,8 @@ class CheckPVE:
                     self.addPerfdata("cpu", round(vm['cpu'] * 100, 2))
 
                     if self.options.values_mb:
-                        memory = vm['mem'] /1024/1024
-                        self.addPerfdata("memory", memory, unit="MB", max=vm['maxmem']/1024/1024)
+                        memory = vm['mem'] / 1024 / 1024
+                        self.addPerfdata("memory", memory, unit="MB", max=vm['maxmem'] / 1024 / 1024)
 
                     else:
                         memory = self.getValue(vm['mem'], vm['maxmem'])
@@ -372,9 +372,11 @@ class CheckPVE:
             self.checkMessage = "Unable to determine pve version"
         elif self.options.min_version and LooseVersion(self.options.min_version) > LooseVersion(data['version']):
             self.checkResult = NagiosState.CRITICAL
-            self.checkMessage = "Current pve version '{}' ({}) is lower than the min. required version '{}'".format(data['version'], data['repoid'], self.options.min_version)
+            self.checkMessage = "Current pve version '{}' ({}) is lower than the min. required version '{}'".format(
+                data['version'], data['repoid'], self.options.min_version)
         else:
-            self.checkMessage = "Your pve instance version '{}' ({}) is up to date".format(data['version'], data['repoid'])
+            self.checkMessage = "Your pve instance version '{}' ({}) is up to date".format(data['version'],
+                                                                                           data['repoid'])
 
     def checkMemory(self):
         url = self.getURL('nodes/{}/status'.format(self.options.node))
@@ -498,17 +500,22 @@ class CheckPVE:
         api_opts = p.add_argument_group('API Options')
 
         api_opts.add_argument("-e", "--api-endpoint", required=True, help="PVE api endpoint hostname")
+        api_opts.add_argument("--api-port", required=False, help="PVE api endpoint port")
+
         api_opts.add_argument("-u", "--username", dest='api_user', required=True,
                               help="PVE api user (e.g. icinga2@pve or icinga2@pam, depending on which backend you have chosen in proxmox)")
         api_opts.add_argument("-p", "--password", dest='api_password', required=True, help="PVE api user password")
         api_opts.add_argument("-k", "--insecure", dest='api_insecure', action='store_true', default=False,
                               help="Don't verify HTTPS certificate")
 
+        api_opts.set_defaults(api_port=8006)
+
         check_opts = p.add_argument_group('Check Options')
 
         check_opts.add_argument("-m", "--mode",
-                                choices=('cluster', 'version', 'cpu', 'memory', 'storage', 'io_wait', 'updates', 'services',
-                                         'subscription', 'vm', 'vm_status', 'replication', 'disk-health'),
+                                choices=(
+                                'cluster', 'version', 'cpu', 'memory', 'storage', 'io_wait', 'updates', 'services',
+                                'subscription', 'vm', 'vm_status', 'replication', 'disk-health'),
                                 required=True,
                                 help="Mode to use.")
 
