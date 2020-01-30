@@ -3,9 +3,9 @@
 
 # ------------------------------------------------------------------------------
 # check_pve.py - A check plugin for Proxmox Virtual Environment (PVE).
-# Copyright (C) 2018  Nicolai Buchwitz <nb@tipi-net.de>
+# Copyright (C) 2018-2020  Nicolai Buchwitz <nb@tipi-net.de>
 #
-# Version: 1.1.2
+# Version: 1.1.4
 #
 # ------------------------------------------------------------------------------
 # This program is free software; you can redistribute it and/or
@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 # ------------------------------------------------------------------------------
 
-from __future__ import print_function
 import sys
 
 try:
@@ -51,14 +50,8 @@ class CheckState(Enum):
 
 
 class CheckPVE:
-    VERSION = '1.1.2'
+    VERSION = '1.1.4'
     API_URL = 'https://{hostname}:{port}/api2/json/{command}'
-
-    options = {}
-    ticket = None
-    perfdata = []
-    check_result = -1
-    check_message = ""
 
     def check_output(self):
         message = self.check_message
@@ -398,7 +391,6 @@ class CheckPVE:
             self.check_result = CheckState.WARNING
             self.check_message = kwargs.get('messageWarning', message)
         else:
-            self.check_result = CheckState.OK
             self.check_message = message
 
     @staticmethod
@@ -570,6 +562,12 @@ class CheckPVE:
         self.options = options
 
     def __init__(self):
+        self.options = {}
+        self.ticket = None
+        self.perfdata = []
+        self.check_result = -1
+        self.check_message = ""
+
         self.parse_args()
         self.get_ticket()
 
