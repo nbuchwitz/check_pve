@@ -337,6 +337,26 @@ class CheckPVE:
             self.check_result = CheckState.CRITICAL
             self.check_message = 'Cluster is unhealthy - no quorum'
 
+    def check_ceph_health(self):
+        url = self.get_url('cluster/ceph/status')
+        data = self.request(url)
+
+        for elem in data:
+             if elem == 'health':
+                status = data[elem]["status"]
+                if status == 'HEALTH_OK':
+                    self.check_result = CheckState.OK
+                    self.check_message = "Ceph Cluster is healthy"
+                elif status == 'HEALTH_WARN':
+                    self.check_result = CheckState.WARNING
+                    self.check_message = "Ceph Cluster is in warning state"
+                elif status == 'HEALTH_CRIT':
+                    self.check_result = CheckState.CRITICAL
+                    self.check_message = "Ceph Cluster is in critical state"
+                else:
+                    self.check_result = CheckState.UNKNOWN
+                    self.check_message = "Ceph Cluster is in unknown state"
+
     def check_storage(self, name):
         # check if storage exists
         url = self.get_url('nodes/{}/storage'.format(self.options.node))
@@ -471,6 +491,8 @@ class CheckPVE:
                     self.check_vm_status(idx, only_status=only_status)
             elif self.options.mode == 'replication':
                 self.check_replication(self.options.name)
+            elif self.options.mode == 'ceph-health':
+                self.check_ceph_health()
             else:
                 message = "Check mode '{}' not known".format(self.options.mode)
                 self.output(CheckState.UNKNOWN, message)
@@ -499,7 +521,7 @@ class CheckPVE:
         check_opts.add_argument("-m", "--mode",
                                 choices=(
                                     'cluster', 'version', 'cpu', 'memory', 'storage', 'io_wait', 'updates', 'services',
-                                    'subscription', 'vm', 'vm_status', 'replication', 'disk-health'),
+                                    'subscription', 'vm', 'vm_status', 'replication', 'disk-health', 'ceph-health'),
                                 required=True,
                                 help="Mode to use.")
 
@@ -537,7 +559,7 @@ class CheckPVE:
 
         options = p.parse_args()
 
-        if not options.node and options.mode not in ['cluster', 'vm', 'version']:
+        if not options.node and options.mode not in ['cluster', 'vm', 'version', 'ceph-health']:
             p.print_usage()
             message = "{}: error: --mode {} requires node name (--node)".format(p.prog, options.mode)
             self.output(CheckState.UNKNOWN, message)
