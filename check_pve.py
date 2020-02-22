@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # ------------------------------------------------------------------------------
 # check_pve.py - A check plugin for Proxmox Virtual Environment (PVE).
 # Copyright (C) 2018-2020  Nicolai Buchwitz <nb@tipi-net.de>
 #
-# Version: 1.1.4
+# Version: 1.2.0
 #
 # ------------------------------------------------------------------------------
 # This program is free software; you can redistribute it and/or
@@ -50,7 +50,7 @@ class CheckState(Enum):
 
 
 class CheckPVE:
-    VERSION = '1.1.4'
+    VERSION = '1.2.0'
     API_URL = 'https://{hostname}:{port}/api2/json/{command}'
 
     def check_output(self):
