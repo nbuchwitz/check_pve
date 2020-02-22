@@ -461,44 +461,43 @@ class CheckPVE:
 
         if self.options.mode == 'cluster':
             self.check_cluster_status()
-        else:
-            if self.options.mode == 'version':
-                self.check_version()
-            elif self.options.mode == 'memory':
-                self.check_memory()
-            elif self.options.mode == 'io_wait':
-                self.check_io_wait()
-            elif self.options.mode == 'disk-health':
-                self.check_disks()
-            elif self.options.mode == 'cpu':
-                self.check_cpu()
-            elif self.options.mode == 'services':
-                self.check_services()
-            elif self.options.mode == 'updates':
-                self.check_updates()
-            elif self.options.mode == 'subscription':
-                self.check_subscription()
-            elif self.options.mode == 'storage':
-                self.check_storage(self.options.name)
-            elif self.options.mode in ['vm', 'vm_status']:
-                only_status = self.options.mode == 'vm_status'
+        elif self.options.mode == 'version':
+            self.check_version()
+        elif self.options.mode == 'memory':
+            self.check_memory()
+        elif self.options.mode == 'io_wait':
+            self.check_io_wait()
+        elif self.options.mode == 'disk-health':
+            self.check_disks()
+        elif self.options.mode == 'cpu':
+            self.check_cpu()
+        elif self.options.mode == 'services':
+            self.check_services()
+        elif self.options.mode == 'updates':
+            self.check_updates()
+        elif self.options.mode == 'subscription':
+            self.check_subscription()
+        elif self.options.mode == 'storage':
+            self.check_storage(self.options.name)
+        elif self.options.mode in ['vm', 'vm_status']:
+            only_status = self.options.mode == 'vm_status'
 
-                if self.options.name:
-                    idx = self.options.name
-                else:
-                    idx = self.options.vmid
-
-                if self.options.expected_vm_status:
-                    self.check_vm_status(idx, expected_state=self.options.expected_vm_status, only_status=only_status)
-                else:
-                    self.check_vm_status(idx, only_status=only_status)
-            elif self.options.mode == 'replication':
-                self.check_replication(self.options.name)
-            elif self.options.mode == 'ceph-health':
-                self.check_ceph_health()
+            if self.options.name:
+                idx = self.options.name
             else:
-                message = "Check mode '{}' not known".format(self.options.mode)
-                self.output(CheckState.UNKNOWN, message)
+                idx = self.options.vmid
+
+            if self.options.expected_vm_status:
+                self.check_vm_status(idx, expected_state=self.options.expected_vm_status, only_status=only_status)
+            else:
+                self.check_vm_status(idx, only_status=only_status)
+        elif self.options.mode == 'replication':
+            self.check_replication(self.options.name)
+        elif self.options.mode == 'ceph-health':
+            self.check_ceph_health()
+        else:
+            message = "Check mode '{}' not known".format(self.options.mode)
+            self.output(CheckState.UNKNOWN, message)
 
         self.check_output()
 
