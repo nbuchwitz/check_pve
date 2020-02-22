@@ -340,22 +340,25 @@ class CheckPVE:
     def check_ceph_health(self):
         url = self.get_url('cluster/ceph/status')
         data = self.request(url)
+        ceph_health = data.get('health', {})
 
-        for elem in data:
-             if elem == 'health':
-                status = data[elem]["status"]
-                if status == 'HEALTH_OK':
-                    self.check_result = CheckState.OK
-                    self.check_message = "Ceph Cluster is healthy"
-                elif status == 'HEALTH_WARN':
-                    self.check_result = CheckState.WARNING
-                    self.check_message = "Ceph Cluster is in warning state"
-                elif status == 'HEALTH_CRIT':
-                    self.check_result = CheckState.CRITICAL
-                    self.check_message = "Ceph Cluster is in critical state"
-                else:
-                    self.check_result = CheckState.UNKNOWN
-                    self.check_message = "Ceph Cluster is in unknown state"
+        if 'status' not in ceph_health:
+            self.check_result = CheckState.UNKNOWN
+            self.check_message = "Could not fetch Ceph status from API. Check the output of 'pvesh get cluster/ceph' on your node"
+            return
+
+        if ceph_health['status'] == 'HEALTH_OK':
+            self.check_result = CheckState.OK
+            self.check_message = "Ceph Cluster is healthy"
+        elif ceph_health['status'] == 'HEALTH_WARN':
+            self.check_result = CheckState.WARNING
+            self.check_message = "Ceph Cluster is in warning state"
+        elif ceph_health['status'] == 'HEALTH_CRIT':
+            self.check_result = CheckState.CRITICAL
+            self.check_message = "Ceph Cluster is in critical state"
+        else:
+            self.check_result = CheckState.UNKNOWN
+            self.check_message = "Ceph Cluster is in unknown state"
 
     def check_storage(self, name):
         # check if storage exists
