@@ -57,7 +57,7 @@ The ``icinga2`` folder contains the command definition and service examples for 
 
 ```
 usage: check_pve.py [-h] -e API_ENDPOINT [--api-port API_PORT] -u API_USER -p API_PASSWORD [-k] -m
-                    {cluster,version,cpu,memory,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health}
+                    {cluster,version,cpu,memory,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health,ceph-health}
                     [-n NODE] [--name NAME] [--vmid VMID]
                     [--expected-vm-status {running,stopped,paused}]
                     [--ignore-vm-status] [--ignore-service NAME]
@@ -193,6 +193,12 @@ For hostalive checks without gathering performance data use ``vm_status`` instea
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m replication -n node1
 OK - No failed replication jobs on node1
+```
+
+**Check ceph cluster health**
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m ceph-health
+WARNING - Ceph Cluster is in warning state
 ```
 
 ## FAQ
