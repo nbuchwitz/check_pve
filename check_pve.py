@@ -401,11 +401,11 @@ class CheckPVE:
 
     def check_thresholds(self, value, message, **kwargs):
         if kwargs.get('lowerValue', False):
-            is_warning = self.options.treshold_warning and value < float(self.options.treshold_warning)
-            is_critical = self.options.treshold_critical and value < float(self.options.treshold_critical)
+            is_warning = self.options.threshold_warning and value < float(self.options.threshold_warning)
+            is_critical = self.options.threshold_critical and value < float(self.options.threshold_critical)
         else:
-            is_warning = self.options.treshold_warning and value > float(self.options.treshold_warning)
-            is_critical = self.options.treshold_critical and value > float(self.options.treshold_critical)
+            is_warning = self.options.threshold_warning and value > float(self.options.threshold_warning)
+            is_critical = self.options.threshold_critical and value > float(self.options.threshold_critical)
 
         if is_critical:
             self.check_result = CheckState.CRITICAL
@@ -432,13 +432,13 @@ class CheckPVE:
 
         perfdata = '{}={}{}'.format(name, value, unit)
 
-        if self.options.treshold_warning and (self.options.values_mb == (unit == 'MB')):
-            perfdata += ';{}'.format(self.options.treshold_warning)
+        if self.options.threshold_warning and (self.options.values_mb == (unit == 'MB')):
+            perfdata += ';{}'.format(self.options.threshold_warning)
         else:
             perfdata += ';'
 
-        if self.options.treshold_critical and (self.options.values_mb == (unit == 'MB')):
-            perfdata += ';{}'.format(self.options.treshold_critical)
+        if self.options.threshold_critical and (self.options.values_mb == (unit == 'MB')):
+            perfdata += ';{}'.format(self.options.threshold_critical)
         else:
             perfdata += ';'
 
@@ -549,12 +549,12 @@ class CheckPVE:
         check_opts.add_argument('--ignore-disk', dest='ignore_disks', action='append', metavar='NAME',
                                 help='Ignore disk NAME in health check', default=[])
 
-        check_opts.add_argument('-w', '--warning', dest='treshold_warning', type=float,
-                                help='Warning treshold for check value')
-        check_opts.add_argument('-c', '--critical', dest='treshold_critical', type=float,
-                                help='Critical treshold for check value')
+        check_opts.add_argument('-w', '--warning', dest='threshold_warning', type=float,
+                                help='Warning threshold for check value')
+        check_opts.add_argument('-c', '--critical', dest='threshold_critical', type=float,
+                                help='Critical threshold for check value')
         check_opts.add_argument('-M', dest='values_mb', action='store_true', default=False,
-                                help='Values are shown in MB (if available). Tresholds are also treated as MB values')
+                                help='Values are shown in MB (if available). Thresholds are also treated as MB values')
         check_opts.add_argument('-V', '--min-version', dest='min_version', type=str,
                                 help='The minimal pve version to check for. Any version lower than this will return '
                                      'CRITICAL.')
@@ -577,10 +577,10 @@ class CheckPVE:
             message = "{}: error: --mode {} requires storage name (--name)".format(p.prog, options.mode)
             self.output(CheckState.UNKNOWN, message)
 
-        if options.treshold_warning and options.treshold_critical:
-            if options.mode != 'subscription' and options.treshold_critical <= options.treshold_warning:
+        if options.threshold_warning and options.threshold_critical:
+            if options.mode != 'subscription' and options.threshold_critical <= options.threshold_warning:
                 p.error("Critical value must be greater than warning value")
-            elif options.mode == 'subscription' and options.treshold_critical >= options.treshold_warning:
+            elif options.mode == 'subscription' and options.threshold_critical >= options.threshold_warning:
                 p.error("Critical value must be lower than warning value")
 
         self.options = options
