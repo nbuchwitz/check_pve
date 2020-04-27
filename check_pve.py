@@ -138,10 +138,10 @@ class CheckPVE:
             self.add_perfdata(kwargs.get('perfkey', 'usage'), used_percent)
 
         if self.options.values_mb:
-            message += ' {}{}'.format(used, 'MB')
+            message += ' {} {}'.format(used, 'MB')
             value = used
         else:
-            message += ' {}{}'.format(used_percent, '%')
+            message += ' {} {}'.format(used_percent, '%')
             value = used_percent
 
         self.check_thresholds(value, message)
@@ -371,7 +371,7 @@ class CheckPVE:
             return
 
         url = self.get_url('nodes/{}/storage/{}/status'.format(self.options.node, name))
-        self.check_api_value(url, 'Storage usage is')
+        self.check_api_value(url, "Usage of storage '{}' is".format(name))
 
     def check_version(self):
         url = self.get_url('version')
