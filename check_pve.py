@@ -198,6 +198,7 @@ class CheckPVE:
         url = self.get_url('nodes/{}/disks'.format(self.options.node))
 
         failed = []
+        unknown = []
         disks = self.request(url + '/list')
         for disk in disks:
             name = disk['devpath'].replace('/dev/', '')
@@ -205,7 +206,11 @@ class CheckPVE:
             if name in self.options.ignore_disks:
                 continue
 
-            if disk['health'] not in ('PASSED', 'OK'):
+            if disk['health'] in ('UNKNOWN'):
+                self.check_result = CheckState.WARNING
+                unknown.append({"serial": disk["serial"], "device": disk['devpath']})
+
+            elif disk['health'] not in ('PASSED', 'OK'):
                 self.check_result = CheckState.WARNING
                 failed.append({"serial": disk["serial"], "device": disk['devpath']})
 
@@ -213,10 +218,16 @@ class CheckPVE:
                 self.add_perfdata('wearout_{}'.format(name), disk['wearout'])
 
         if failed:
-            self.check_message = "The following disks failed the health test:\n"
+            self.check_message = "{} of {} disks failed the health test:\n".format(len(failed), len(disks))
             for disk in failed:
                 self.check_message += "  {} with serial '{}'\n".format(disk['device'], disk['serial'])
-        else:
+
+        if unknown:
+            self.check_message += "{} of {} disks have unknown health status:\n".format(len(unknown), len(disks))
+            for disk in unknown:
+                self.check_message += "  {} with serial '{}'\n".format(disk['device'], disk['serial'])
+
+        if not failed and not unknown:
             self.check_message = "All disks are healthy"
 
     def check_replication(self, name):
