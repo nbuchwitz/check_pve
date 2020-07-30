@@ -191,7 +191,7 @@ class CheckPVE:
                 break
 
         if not found:
-            self.check_message = "VM or LXC named '{}' not found".format(idx)
+            self.check_message = "VM or LXC '{}' not found".format(idx)
             self.check_result = CheckState.WARNING
 
     def check_disks(self):
