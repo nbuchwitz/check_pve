@@ -536,7 +536,7 @@ class CheckPVE:
                                 help='Node to check (necessary for all modes except cluster and version)')
 
         check_opts.add_argument('--name', dest='name',
-                                help='Name of storage or vm')
+                                help='Name of storage, vm, or container')
 
         check_opts.add_argument('--vmid', dest='vmid', type=int,
                                 help='ID of virtual machine or container')

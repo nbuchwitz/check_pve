@@ -85,7 +85,7 @@ Check Options:
                         Mode to use.
   -n NODE, --node NODE  Node to check (necessary for all modes except cluster
                         and version)
-  --name NAME           Name of storage or vm
+  --name NAME           Name of storage, vm, or container
   --vmid VMID           ID of virtual machine or container
   --expected-vm-status {running,stopped,paused}
                         Expected VM status
@@ -157,6 +157,12 @@ Without specifying a node name:
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m vm --name test-vm
 OK - VM 'test-vm' is running on 'node1'|cpu=1.85%;; memory=8.33%;;
+```
+
+You can also pass a container name for the VM check:
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m vm --name test-lxc
+OK - LXC 'test-lxc' on node 'node1' is running|cpu=0.11%;; memory=13.99%;;
 ```
 
 With memory thresholds:
