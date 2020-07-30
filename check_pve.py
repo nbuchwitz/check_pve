@@ -156,18 +156,23 @@ class CheckPVE:
         found = False
         for vm in data:
             if vm['name'] == idx or vm['vmid'] == idx:
+                # Check if VM (default) or LXC
+                vm_type = "VM"
+                if vm['type'] == 'lxc':
+                    vm_type = "LXC"
+
                 if vm['status'] != expected_state:
-                    self.check_message = "VM '{}' is {} (expected: {})".format(vm['name'], vm['status'], expected_state)
+                    self.check_message = "{} '{}' is {} (expected: {})".format(vm_type, vm['name'], vm['status'], expected_state)
                     if not self.options.ignore_vm_status:
                         self.check_result = CheckState.CRITICAL
                 else:
                     if self.options.node and self.options.node != vm['node']:
-                        self.check_message = "VM '{}' is {}, but located on node '{}' instead of '{}'" \
-                            .format(vm['name'], expected_state, vm['node'], self.options.node)
+                        self.check_message = "{} '{}' is {}, but located on node '{}' instead of '{}'" \
+                            .format(vm_type, vm['name'], expected_state, vm['node'], self.options.node)
                         self.check_result = CheckState.WARNING
                     else:
-                        self.check_message = "VM '{}' on node '{}' is {}" \
-                            .format(vm['name'], vm['node'], expected_state)
+                        self.check_message = "{} '{}' on node '{}' is {}" \
+                            .format(vm_type, vm['name'], vm['node'], expected_state)
 
                 if vm['status'] == 'running' and not only_status:
                     self.add_perfdata("cpu", round(vm['cpu'] * 100, 2))
@@ -186,7 +191,7 @@ class CheckPVE:
                 break
 
         if not found:
-            self.check_message = "VM '{}' not found".format(idx)
+            self.check_message = "VM or LXC named '{}' not found".format(idx)
             self.check_result = CheckState.WARNING
 
     def check_disks(self):
