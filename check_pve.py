@@ -220,12 +220,12 @@ class CheckPVE:
         if failed:
             self.check_message = "{} of {} disks failed the health test:\n".format(len(failed), len(disks))
             for disk in failed:
-                self.check_message += "  {} with serial '{}'\n".format(disk['device'], disk['serial'])
+                self.check_message += "- {} with serial '{}'\n".format(disk['device'], disk['serial'])
 
         if unknown:
             self.check_message += "{} of {} disks have unknown health status:\n".format(len(unknown), len(disks))
             for disk in unknown:
-                self.check_message += "  {} with serial '{}'\n".format(disk['device'], disk['serial'])
+                self.check_message += "- {} with serial '{}'\n".format(disk['device'], disk['serial'])
 
         if not failed and not unknown:
             self.check_message = "All disks are healthy"
