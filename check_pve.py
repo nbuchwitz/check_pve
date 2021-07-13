@@ -267,16 +267,17 @@ class CheckPVE:
 
         failed = {}
         for service in data:
-            if service['state'] != 'running' and service['name'] not in self.options.ignore_services:
+            if service['state'] != 'running' and service['active-state'] == 'active' and service['name'] not in self.options.ignore_services:
                 failed[service['name']] = service['desc']
+
 
         if failed:
             self.check_result = CheckState.CRITICAL
-            message = "{} services not running:\n\n".format(len(failed))
-            message += "\n".join(['* {}: {}'.format(i, failed[i]) for i in failed])
+            message = "{} services are not running:\n\n".format(len(failed))
+            message += "\n".join(['- {} ({}) is not running'.format(failed[i], i) for i in failed])
             self.check_message = message
         else:
-            self.check_message = "All services running"
+            self.check_message = "All services are running"
 
     def check_subscription(self):
         url = self.get_url('nodes/{}/subscription'.format(self.options.node))
