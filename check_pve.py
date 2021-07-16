@@ -267,7 +267,7 @@ class CheckPVE:
 
         failed = {}
         for service in data:
-            if service['state'] != 'running' and service['active-state'] == 'active' and service['name'] not in self.options.ignore_services:
+            if service['state'] != 'running' and service.get('active-state', 'active') == 'active' and service['name'] not in self.options.ignore_services:
                 failed[service['name']] = service['desc']
 
 
