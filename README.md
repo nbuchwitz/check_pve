@@ -215,4 +215,4 @@ Verify that your DNS server is working and can resolve your hostname. If everyth
 
 ## Contributors
 
-* Alexey Kukushkin ([meshok0](https://github.com/meshok0))
+Thank you to everyone, who is contributing to `check_pve`: https://github.com/nbuchwitz/check_pve/graphs/contributors.
