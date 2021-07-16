@@ -38,7 +38,7 @@ try:
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 except ImportError as e:
-    print("Missing python module: {}".format(e.message))
+    print("Missing python module: {}".format(str(e)))
     sys.exit(255)
 
 
@@ -162,7 +162,8 @@ class CheckPVE:
                     vm_type = "LXC"
 
                 if vm['status'] != expected_state:
-                    self.check_message = "{} '{}' is {} (expected: {})".format(vm_type, vm['name'], vm['status'], expected_state)
+                    self.check_message = "{} '{}' is {} (expected: {})".format(vm_type, vm['name'], vm['status'],
+                                                                               expected_state)
                     if not self.options.ignore_vm_status:
                         self.check_result = CheckState.CRITICAL
                 else:
@@ -206,7 +207,7 @@ class CheckPVE:
             if name in self.options.ignore_disks:
                 continue
 
-            if disk['health'] in ('UNKNOWN'):
+            if disk['health'] == 'UNKNOWN':
                 self.check_result = CheckState.WARNING
                 unknown.append({"serial": disk["serial"], "device": disk['devpath']})
 
@@ -230,7 +231,7 @@ class CheckPVE:
         if not failed and not unknown:
             self.check_message = "All disks are healthy"
 
-    def check_replication(self, name):
+    def check_replication(self):
         url = self.get_url('nodes/{}/replication'.format(self.options.node))
 
         if self.options.vmid:
@@ -267,9 +268,10 @@ class CheckPVE:
 
         failed = {}
         for service in data:
-            if service['state'] != 'running' and service.get('active-state', 'active') == 'active' and service['name'] not in self.options.ignore_services:
+            if service['state'] != 'running' \
+                    and service.get('active-state', 'active') == 'active' \
+                    and service['name'] not in self.options.ignore_services:
                 failed[service['name']] = service['desc']
-
 
         if failed:
             self.check_result = CheckState.CRITICAL
@@ -361,7 +363,8 @@ class CheckPVE:
 
         if 'status' not in ceph_health:
             self.check_result = CheckState.UNKNOWN
-            self.check_message = "Could not fetch Ceph status from API. Check the output of 'pvesh get cluster/ceph' on your node"
+            self.check_message = "Could not fetch Ceph status from API. " \
+                                 "Check the output of 'pvesh get cluster/ceph' on your node"
             return
 
         if ceph_health['status'] == 'HEALTH_OK':
@@ -509,7 +512,7 @@ class CheckPVE:
             else:
                 self.check_vm_status(idx, only_status=only_status)
         elif self.options.mode == 'replication':
-            self.check_replication(self.options.name)
+            self.check_replication()
         elif self.options.mode == 'ceph-health':
             self.check_ceph_health()
         else:
@@ -606,7 +609,7 @@ class CheckPVE:
         self.options = {}
         self.ticket = None
         self.perfdata = []
-        self.check_result = -1
+        self.check_result = CheckState.UNKNOWN
         self.check_message = ""
 
         self.parse_args()
