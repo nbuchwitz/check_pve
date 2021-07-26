@@ -383,18 +383,26 @@ class CheckPVE:
             self.check_message = "Could not fetch fragmentation of ZFS pool '{}'".format(name)
         else:
             if warnings or critical:
+                value = None
                 if critical:
                     self.check_result = CheckState.CRITICAL
+                    if name is not None:
+                        value = critical[0]['frag']
                 else:
                     self.check_result = CheckState.WARNING
+                    if name is not None:
+                        value = warnings[0]['frag']
 
-                message = "{} of {} ZFS pools are above fragmentation thresholds:\n\n".format(
-                    len(warnings) + len(critical), len(data))
-                message += "\n".join(
-                    ['- {} ({} %) is CRITICAL\n'.format(pool['name'], pool['frag']) for pool in critical])
-                message += "\n".join(
-                    ['- {} ({} %) is WARNING\n'.format(pool['name'], pool['frag']) for pool in warnings])
-                self.check_message = message
+                if name is not None:
+                    self.check_message = "Fragmentation of ZFS pool '{}' is above thresholds: {} %".format(name, value)
+                else:
+                    message = "{} of {} ZFS pools are above fragmentation thresholds:\n\n".format(
+                        len(warnings) + len(critical), len(data))
+                    message += "\n".join(
+                        ['- {} ({} %) is CRITICAL\n'.format(pool['name'], pool['frag']) for pool in critical])
+                    message += "\n".join(
+                        ['- {} ({} %) is WARNING\n'.format(pool['name'], pool['frag']) for pool in warnings])
+                    self.check_message = message
             else:
                 self.check_result = CheckState.OK
                 if name is not None:

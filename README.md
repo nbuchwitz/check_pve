@@ -199,6 +199,35 @@ OK - No failed replication jobs on node1
 WARNING - Ceph Cluster is in warning state
 ```
 
+**Check ZFS pool health**
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m zfs-health -n pve 
+OK - All ZFS pools are healthy
+```
+
+Check for specific pool:
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m zfs-health -n pve --name rpool
+OK - ZFS pool 'rpool' is healthy
+```
+
+**Check ZFS pool fragmentation**
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m zfs-fragmentation -n pve -w 40 -c 60
+CRITICAL - 2 of 2 ZFS pools are above fragmentation thresholds:
+
+- rpool (71 %) is CRITICAL
+- diskpool (50 %) is WARNING
+|fragmentation_diskpool=50%;40.0;60.0 fragmentation_rpool=71%;40.0;60.0
+
+```
+
+Check for specific pool:
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m zfs-fragmentation -n pve --name diskpool -w 40 -c 60
+WARNING - Fragmentation of ZFS pool 'diskpool' is above thresholds: 50 %|fragmentation=50%;40.0;60.0
+```
+
 ## FAQ
 
 ### Could not connect to PVE API: Failed to resolve hostname
