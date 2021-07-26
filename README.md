@@ -56,13 +56,8 @@ For further information about the Proxmox VE privilege system have a look into t
 The ``icinga2`` folder contains the command definition and service examples for use with Icinga2.
 
 ```
-usage: check_pve.py [-h] -e API_ENDPOINT [--api-port API_PORT] -u API_USER -p API_PASSWORD [-k] -m
-                    {cluster,version,cpu,memory,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health,ceph-health}
-                    [-n NODE] [--name NAME] [--vmid VMID]
-                    [--expected-vm-status {running,stopped,paused}]
-                    [--ignore-vm-status] [--ignore-service NAME]
-                    [--ignore-disk NAME] [-w TRESHOLD_WARNING]
-                    [-c TRESHOLD_CRITICAL] [-M] [-V MIN_VERSION]
+usage: check_pve.py [-h] -e API_ENDPOINT [--api-port API_PORT] -u API_USER -p API_PASSWORD [-k] -m {cluster,version,cpu,memory,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation}
+                    [-n NODE] [--name NAME] [--vmid VMID] [--expected-vm-status {running,stopped,paused}] [--ignore-vm-status] [--ignore-service NAME] [--ignore-disk NAME] [-w THRESHOLD_WARNING] [-c THRESHOLD_CRITICAL] [-M] [-V MIN_VERSION]
 
 Check command for PVE hosts via API
 
@@ -74,17 +69,15 @@ API Options:
                         PVE api endpoint hostname
   --api-port API_PORT   PVE api endpoint port
   -u API_USER, --username API_USER
-                        PVE api user (e.g. icinga2@pve or icinga2@pam,
-                        depending on which backend you have chosen in proxmox)
+                        PVE api user (e.g. icinga2@pve or icinga2@pam, depending on which backend you have chosen in proxmox)
   -p API_PASSWORD, --password API_PASSWORD
                         PVE api user password
   -k, --insecure        Don't verify HTTPS certificate
 
 Check Options:
-  -m {cluster,version,cpu,memory,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health}, --mode {cluster,version,cpu,memory,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health}
+  -m {cluster,version,cpu,memory,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation}, --mode {cluster,version,cpu,memory,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation}
                         Mode to use.
-  -n NODE, --node NODE  Node to check (necessary for all modes except cluster
-                        and version)
+  -n NODE, --node NODE  Node to check (necessary for all modes except cluster and version)
   --name NAME           Name of storage, vm, or container
   --vmid VMID           ID of virtual machine or container
   --expected-vm-status {running,stopped,paused}
@@ -93,15 +86,14 @@ Check Options:
   --ignore-service NAME
                         Ignore service NAME in checks
   --ignore-disk NAME    Ignore disk NAME in health check
-  -w TRESHOLD_WARNING, --warning TRESHOLD_WARNING
-                        Warning treshold for check value
-  -c TRESHOLD_CRITICAL, --critical TRESHOLD_CRITICAL
-                        Critical treshold for check value
-  -M                    Values are shown in MB (if available). Tresholds are
-                        also treated as MB values
+  -w THRESHOLD_WARNING, --warning THRESHOLD_WARNING
+                        Warning threshold for check value
+  -c THRESHOLD_CRITICAL, --critical THRESHOLD_CRITICAL
+                        Critical threshold for check value
+  -M                    Values are shown in MB (if available). Thresholds are also treated as MB values
   -V MIN_VERSION, --min-version MIN_VERSION
-                        The minimal pve version to check for. Any version
-                        lower than this will return CRITICAL.
+                        The minimal pve version to check for. Any version lower than this will return CRITICAL.
+
 ```
 
 ## Examples

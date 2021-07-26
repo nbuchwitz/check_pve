@@ -356,6 +356,82 @@ class CheckPVE:
             self.check_result = CheckState.CRITICAL
             self.check_message = 'Cluster is unhealthy - no quorum'
 
+    def check_zfs_fragmentation(self, name=None):
+        url = self.get_url('nodes/{}/disks/zfs'.format(self.options.node))
+        data = self.request(url)
+
+        warnings = []
+        critical = []
+        found = name is None
+        for pool in data:
+            found = found or name == pool['name']
+            if (name is not None and name == pool['name']) or name is None:
+                key = "fragmentation"
+                if name is None:
+                    key += '_{}'.format(pool['name'])
+                self.add_perfdata(key, pool['frag'])
+
+                if self.options.threshold_critical is not None and pool['frag'] > float(
+                        self.options.threshold_critical):
+                    critical.append(pool)
+                elif self.options.threshold_warning is not None and pool['frag'] > float(
+                        self.options.threshold_warning):
+                    warnings.append(pool)
+
+        if not found:
+            self.check_result = CheckState.UNKNOWN
+            self.check_message = "Could not fetch fragmentation of ZFS pool '{}'".format(name)
+        else:
+            if warnings or critical:
+                if critical:
+                    self.check_result = CheckState.CRITICAL
+                else:
+                    self.check_result = CheckState.WARNING
+
+                message = "{} of {} ZFS pools are above fragmentation thresholds:\n\n".format(
+                    len(warnings) + len(critical), len(data))
+                message += "\n".join(
+                    ['- {} ({} %) is CRITICAL\n'.format(pool['name'], pool['frag']) for pool in critical])
+                message += "\n".join(
+                    ['- {} ({} %) is WARNING\n'.format(pool['name'], pool['frag']) for pool in warnings])
+                self.check_message = message
+            else:
+                self.check_result = CheckState.OK
+                if name is not None:
+                    self.check_message = "Fragmentation of ZFS pool '{}' is OK".format(name)
+                else:
+                    self.check_message = "Fragmentation of all ZFS pools is OK"
+
+    def check_zfs_health(self, name=None):
+        url = self.get_url('nodes/{}/disks/zfs'.format(self.options.node))
+        data = self.request(url)
+
+        unhealthy = []
+        found = name is None
+        healthy_conditions = ['online']
+        for pool in data:
+            found = found or name == pool['name']
+            if (name is not None and name == pool['name']) or name is None:
+                if pool['health'].lower() not in healthy_conditions:
+                    unhealthy.append(pool)
+
+        if not found:
+            self.check_result = CheckState.UNKNOWN
+            self.check_message = "Could not fetch health of ZFS pool '{}'".format(name)
+        else:
+            if unhealthy:
+                self.check_result = CheckState.CRITICAL
+                message = "{} ZFS pools are not healthy:\n\n".format(len(unhealthy))
+                message += "\n".join(
+                    ['- {} ({}) is not healthy'.format(pool['name'], pool['health']) for pool in unhealthy])
+                self.check_message = message
+            else:
+                self.check_result = CheckState.OK
+                if name is not None:
+                    self.check_message = "ZFS pool '{}' is healthy".format(name)
+                else:
+                    self.check_message = "All ZFS pools are healthy"
+
     def check_ceph_health(self):
         url = self.get_url('cluster/ceph/status')
         data = self.request(url)
@@ -515,6 +591,10 @@ class CheckPVE:
             self.check_replication()
         elif self.options.mode == 'ceph-health':
             self.check_ceph_health()
+        elif self.options.mode == 'zfs-health':
+            self.check_zfs_health(self.options.name)
+        elif self.options.mode == 'zfs-fragmentation':
+            self.check_zfs_fragmentation(self.options.name)
         else:
             message = "Check mode '{}' not known".format(self.options.mode)
             self.output(CheckState.UNKNOWN, message)
@@ -543,7 +623,8 @@ class CheckPVE:
         check_opts.add_argument("-m", "--mode",
                                 choices=(
                                     'cluster', 'version', 'cpu', 'memory', 'storage', 'io_wait', 'updates', 'services',
-                                    'subscription', 'vm', 'vm_status', 'replication', 'disk-health', 'ceph-health'),
+                                    'subscription', 'vm', 'vm_status', 'replication', 'disk-health', 'ceph-health',
+                                    'zfs-health', 'zfs-fragmentation'),
                                 required=True,
                                 help="Mode to use.")
 
@@ -581,7 +662,7 @@ class CheckPVE:
 
         options = p.parse_args()
 
-        if not options.node and options.mode not in ['cluster', 'vm', 'version', 'ceph-health']:
+        if not options.node and options.mode not in ['cluster', 'vm', 'version', 'ceph-health', 'zfs-health']:
             p.print_usage()
             message = "{}: error: --mode {} requires node name (--node)".format(p.prog, options.mode)
             self.output(CheckState.UNKNOWN, message)
