@@ -85,8 +85,9 @@ class CheckPVE:
                 response = requests.get(
                     url,
                     verify=not self.options.api_insecure,
-                    cookies=self.ticket,
-                    params=kwargs.get('params', None)
+                    cookies=self.__cookies,
+                    headers=self.__headers,
+                    params=kwargs.get('params', None),
                 )
             else:
                 self.output(CheckState.CRITICAL, "Unsupport request method: {}".format(method))
@@ -117,7 +118,7 @@ class CheckPVE:
         data = {"username": self.options.api_user, "password": self.options.api_password}
         result = self.request(url, "post", data=data)
 
-        self.ticket = {'PVEAuthCookie': result['ticket']}
+        return result['ticket']
 
     def check_api_value(self, url, message, **kwargs):
         result = self.request(url)
@@ -620,7 +621,11 @@ class CheckPVE:
         api_opts.add_argument("-u", "--username", dest='api_user', required=True,
                               help="PVE api user (e.g. icinga2@pve or icinga2@pam, depending on which backend you "
                                    "have chosen in proxmox)")
-        api_opts.add_argument("-p", "--password", dest='api_password', required=True, help="PVE api user password")
+
+        group = api_opts.add_mutually_exclusive_group(required=True)
+        group.add_argument("-p", "--password", dest='api_password', help="PVE API user password")
+        group.add_argument("-t", "--api-token", dest="api_token", help="PVE API token (format: TOKEN_ID=TOKEN_SECRET")
+
         api_opts.add_argument("-k", "--insecure", dest='api_insecure', action='store_true', default=False,
                               help="Don't verify HTTPS certificate")
 
@@ -701,9 +706,15 @@ class CheckPVE:
         self.check_result = CheckState.UNKNOWN
         self.check_message = ""
 
-        self.parse_args()
-        self.get_ticket()
+        self.__headers = {}
+        self.__cookies = {}
 
+        self.parse_args()
+
+        if self.options.api_password is not None:
+            self.__cookies['PVEAuthCookie'] = self.get_ticket()
+        elif self.options.api_token is not None:
+            self.__headers["Authorization"] = "PVEAPIToken={}!{}".format(self.options.api_user, self.options.api_token)
 
 pve = CheckPVE()
 pve.check()

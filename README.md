@@ -39,13 +39,37 @@ Create a user named ``monitoring`` and set password:
 
 ```
 pveum useradd monitoring@pve --comment "The ICINGA 2 monitoring user"
+```
+
+#### Use token based authorization (recommended)
+
+Create an API token named `monitoring` for the user `monitoring`:
+
+```
+pveum user token add monitoing@pve monitoring
+```
+
+Please save the token secret as there isn't any way to fetch it at a later point.
+
+Assign role `monitoring` to token `monitoring`:
+
+```
+pveum acl modify / --roles Monitoring --tokens 'monitoring@pve!monitoring'
+```
+
+
+#### Use password based authorization
+
+Set password for the user `monitoring`:
+
+```
 pveum passwd monitoring@pve
 ```
 
 Assign ``monitoring`` role to user ``monitoring``
 
 ```
-pveum aclmod / -user monitoring@pve -role Monitoring
+pveum acl modify / --users monitoring@pve --roles Monitoring
 ```
 
 For further information about the Proxmox VE privilege system have a look into the [documentation](https://pve.proxmox.com/pve-docs/pve-admin-guide.html#_strong_pveum_strong_proxmox_ve_user_manager).
@@ -56,8 +80,9 @@ For further information about the Proxmox VE privilege system have a look into t
 The ``icinga2`` folder contains the command definition and service examples for use with Icinga2.
 
 ```
-usage: check_pve.py [-h] -e API_ENDPOINT [--api-port API_PORT] -u API_USER -p API_PASSWORD [-k] -m {cluster,version,cpu,memory,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation}
-                    [-n NODE] [--name NAME] [--vmid VMID] [--expected-vm-status {running,stopped,paused}] [--ignore-vm-status] [--ignore-service NAME] [--ignore-disk NAME] [-w THRESHOLD_WARNING] [-c THRESHOLD_CRITICAL] [-M] [-V MIN_VERSION]
+usage: check_pve.py [-h] -e API_ENDPOINT [--api-port API_PORT] -u API_USER (-p API_PASSWORD | -t API_TOKEN) [-k] -m
+                    {cluster,version,cpu,memory,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation} [-n NODE] [--name NAME] [--vmid VMID]
+                    [--expected-vm-status {running,stopped,paused}] [--ignore-vm-status] [--ignore-service NAME] [--ignore-disk NAME] [-w THRESHOLD_WARNING] [-c THRESHOLD_CRITICAL] [-M] [-V MIN_VERSION]
 
 Check command for PVE hosts via API
 
@@ -71,7 +96,9 @@ API Options:
   -u API_USER, --username API_USER
                         PVE api user (e.g. icinga2@pve or icinga2@pam, depending on which backend you have chosen in proxmox)
   -p API_PASSWORD, --password API_PASSWORD
-                        PVE api user password
+                        PVE API user password
+  -t API_TOKEN, --api-token API_TOKEN
+                        PVE API token (format: TOKEN_ID=TOKEN_SECRET
   -k, --insecure        Don't verify HTTPS certificate
 
 Check Options:
@@ -96,11 +123,12 @@ Check Options:
 
 ```
 
-## Examples
+## Check examples
+
 
 **Check cluster health**
 ```
-./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m cluster
+./check_pve.py -u <API_USER> -t <API_TOKEN> -e <API_ENDPOINT> -m cluster
 OK - Cluster 'proxmox1' is healthy'
 ```
 
