@@ -28,7 +28,7 @@ import sys
 try:
     from enum import Enum
     from datetime import datetime
-    from distutils.version import LooseVersion
+    from packaging.version import Version, parse
     import argparse
     import requests
     import urllib3
@@ -484,7 +484,7 @@ class CheckPVE:
         if not data['version']:
             self.check_result = CheckState.UNKNOWN
             self.check_message = "Unable to determine pve version"
-        elif self.options.min_version and LooseVersion(self.options.min_version) > LooseVersion(data['version']):
+        elif self.options.min_version and parse(self.options.min_version) > Version(data['version']):
             self.check_result = CheckState.CRITICAL
             self.check_message = "Current pve version '{}' ({}) is lower than the min. required version '{}'".format(
                 data['version'], data['repoid'], self.options.min_version)
