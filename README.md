@@ -37,7 +37,7 @@ Create a role named ``Monitoring`` and assign necessary privileges:
 
 ```
 pveum roleadd Monitoring
-pveum rolemod Monitoring --privs Sys.Modify,VM.Monitor,Sys.Audit,Datastore.Audit,VM.Audit
+pveum rolemod Monitoring --privs VM.Monitor,Sys.Audit,Datastore.Audit,VM.Audit
 ```
 
 Create a user named ``monitoring`` and set password:
@@ -51,7 +51,7 @@ pveum useradd monitoring@pve --comment "The ICINGA 2 monitoring user"
 Create an API token named `monitoring` for the user `monitoring`:
 
 ```
-pveum user token add monitoing@pve monitoring
+pveum user token add monitoring@pve monitoring
 ```
 
 Please save the token secret as there isn't any way to fetch it at a later point.
