@@ -215,6 +215,12 @@ OK - VM 'test-vm' is not running
 
 For hostalive checks without gathering performance data use ``vm_status`` instead of ``vm``. The parameters are the same as with ``vm``.
 
+**Check swap usage**
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m swap -n pve
+OK - Swap usage is 0.0 %|usage=0.0%;; used=0.0MB;;;8192.0
+```
+
 **Check storage replication status**
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m replication -n node1
