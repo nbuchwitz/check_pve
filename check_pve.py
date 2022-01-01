@@ -5,7 +5,7 @@
 # check_pve.py - A check plugin for Proxmox Virtual Environment (PVE).
 # Copyright (C) 2018-2020  Nicolai Buchwitz <nb@tipi-net.de>
 #
-# Version: 1.2.0
+# Version: 1.2.2
 #
 # ------------------------------------------------------------------------------
 # This program is free software; you can redistribute it and/or
@@ -28,7 +28,7 @@ import sys
 try:
     from enum import Enum
     from datetime import datetime
-    from packaging.version import Version, parse
+    from packaging import version
     import argparse
     import requests
     import urllib3
@@ -50,7 +50,7 @@ class CheckState(Enum):
 
 
 class CheckPVE:
-    VERSION = '1.2.0'
+    VERSION = '1.2.2'
     API_URL = 'https://{hostname}:{port}/api2/json/{command}'
 
     def check_output(self):
@@ -484,7 +484,7 @@ class CheckPVE:
         if not data['version']:
             self.check_result = CheckState.UNKNOWN
             self.check_message = "Unable to determine pve version"
-        elif self.options.min_version and parse(self.options.min_version) > Version(data['version']):
+        elif self.options.min_version and version.parse(self.options.min_version) > version.parse(data['version']):
             self.check_result = CheckState.CRITICAL
             self.check_message = "Current pve version '{}' ({}) is lower than the min. required version '{}'".format(
                 data['version'], data['repoid'], self.options.min_version)
