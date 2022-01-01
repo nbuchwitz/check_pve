@@ -6,23 +6,28 @@ Icinga check command for Proxmox VE via API
 ### Requirements
 
 This check command depends on **Python 3** and the following modules:
- * enum
  * requests
  * argparse
+ * packaging
 
 **Installation on Debian / Ubuntu**
 ```
-apt install python3 python3-requests
+apt install python3 python3-requests python3-packaging
 ```
 
 **Installation on Redhat 7 / CentOS 7**
 ```
-yum install python36 python36-requests
+yum install python36 python36-requests python36-packaging
 ```
 
 **Installation on FreeBSD**
 ```
-pkg install python3 py37-requests
+pkg install python3 py39-requests py39-packaging
+```
+
+**Installation from requirements file**
+```
+pip3 install -r requirements.txt
 ```
 
 
