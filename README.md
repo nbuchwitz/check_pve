@@ -86,12 +86,12 @@ The ``icinga2`` folder contains the command definition and service examples for 
 
 ```
 usage: check_pve.py [-h] -e API_ENDPOINT [--api-port API_PORT] -u API_USER (-p API_PASSWORD | -t API_TOKEN) [-k] -m
-                    {cluster,version,cpu,memory,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation} [-n NODE] [--name NAME] [--vmid VMID]
+                    {cluster,version,cpu,memory,swap,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation} [-n NODE] [--name NAME] [--vmid VMID]
                     [--expected-vm-status {running,stopped,paused}] [--ignore-vm-status] [--ignore-service NAME] [--ignore-disk NAME] [-w THRESHOLD_WARNING] [-c THRESHOLD_CRITICAL] [-M] [-V MIN_VERSION]
 
 Check command for PVE hosts via API
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
 
 API Options:
@@ -107,7 +107,7 @@ API Options:
   -k, --insecure        Don't verify HTTPS certificate
 
 Check Options:
-  -m {cluster,version,cpu,memory,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation}, --mode {cluster,version,cpu,memory,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation}
+  -m {cluster,version,cpu,memory,swap,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation}, --mode {cluster,version,cpu,memory,swap,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation}
                         Mode to use.
   -n NODE, --node NODE  Node to check (necessary for all modes except cluster and version)
   --name NAME           Name of storage, vm, or container
@@ -219,6 +219,12 @@ OK - VM 'test-vm' is not running
 ```
 
 For hostalive checks without gathering performance data use ``vm_status`` instead of ``vm``. The parameters are the same as with ``vm``.
+
+**Check swap usage**
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m swap -n pve
+OK - Swap usage is 0.0 %|usage=0.0%;; used=0.0MB;;;8192.0
+```
 
 **Check storage replication status**
 ```

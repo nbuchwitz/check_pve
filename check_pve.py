@@ -496,6 +496,10 @@ class CheckPVE:
         url = self.get_url('nodes/{}/status'.format(self.options.node))
         self.check_api_value(url, 'Memory usage is', key='memory')
 
+    def check_swap(self):
+        url = self.get_url('nodes/{}/status'.format(self.options.node))
+        self.check_api_value(url, 'Swap usage is', key='swap')
+
     def check_cpu(self):
         url = self.get_url('nodes/{}/status'.format(self.options.node))
         self.check_api_value(url, 'CPU usage is', key='cpu')
@@ -570,6 +574,8 @@ class CheckPVE:
             self.check_version()
         elif self.options.mode == 'memory':
             self.check_memory()
+        elif self.options.mode == 'swap':
+            self.check_swap()
         elif self.options.mode == 'io_wait':
             self.check_io_wait()
         elif self.options.mode == 'disk-health':
@@ -635,7 +641,7 @@ class CheckPVE:
 
         check_opts.add_argument("-m", "--mode",
                                 choices=(
-                                    'cluster', 'version', 'cpu', 'memory', 'storage', 'io_wait', 'updates', 'services',
+                                    'cluster', 'version', 'cpu', 'memory', 'swap', 'storage', 'io_wait', 'updates', 'services',
                                     'subscription', 'vm', 'vm_status', 'replication', 'disk-health', 'ceph-health',
                                     'zfs-health', 'zfs-fragmentation'),
                                 required=True,
