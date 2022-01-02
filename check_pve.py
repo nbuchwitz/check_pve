@@ -31,11 +31,6 @@ try:
     from packaging import version
     import argparse
     import requests
-    import urllib3
-
-    from requests.packages.urllib3.exceptions import InsecureRequestWarning
-
-    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 except ImportError as e:
     print("Missing python module: {}".format(str(e)))
@@ -721,6 +716,10 @@ class CheckPVE:
             self.__cookies['PVEAuthCookie'] = self.get_ticket()
         elif self.options.api_token is not None:
             self.__headers["Authorization"] = "PVEAPIToken={}!{}".format(self.options.api_user, self.options.api_token)
+
+        if self.options.api_insecure:
+            # disable urllib3 warning about insecure requests
+            requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 pve = CheckPVE()
 pve.check()
