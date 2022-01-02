@@ -3,7 +3,7 @@
 
 # ------------------------------------------------------------------------------
 # check_pve.py - A check plugin for Proxmox Virtual Environment (PVE).
-# Copyright (C) 2018-2020  Nicolai Buchwitz <nb@tipi-net.de>
+# Copyright (C) 2018-2022  Nicolai Buchwitz <nb@tipi-net.de>
 #
 # Version: 1.2.2
 #
