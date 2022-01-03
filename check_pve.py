@@ -55,8 +55,14 @@ class CheckThreshold:
     def __lt__(self, other):
         return self.value < other.value
 
+    def __le__(self, other):
+        return self.value <= other.value
+
     def __gt__(self, other):
         return self.value > other.value
+
+    def __ge__(self, other):
+        return self.value >= other.value
 
     def check(self, value: float, lower: bool = False):
         if lower:
@@ -566,7 +572,7 @@ class CheckPVE:
 
             value_critical = self.threshold_critical(metric)
             if value_critical is not None:
-                is_critial = is_critial or value_critical.check(value, kwargs.get('lowerValue', False))
+                is_critical = is_critical or value_critical.check(value, kwargs.get('lowerValue', False))
 
         if is_critical:
             self.check_result = CheckState.CRITICAL
@@ -589,8 +595,7 @@ class CheckPVE:
     def threshold_critical(self, name: str):
         return self.options.threshold_critical.get(name, self.options.threshold_critical.get(None, None))
 
-    @staticmethod
-    def get_value(value, total=None):
+    def get_value(self, value, total=None):
         value = float(value)
 
         if total:
@@ -764,10 +769,23 @@ class CheckPVE:
             message = "{}: error: --mode {} requires storage name (--name)".format(p.prog, options.mode)
             self.output(CheckState.UNKNOWN, message)
 
+        def compare_thresholds(threshold_warning, threshold_critical, comparator):
+            ok = True
+            keys = set(list(threshold_warning.keys()) + list(threshold_critical.keys()))
+            for key in keys:
+                if (key in threshold_warning and key in threshold_critical) or (None in threshold_warning and None in threshold_critical):
+                    ok = ok and comparator(threshold_warning[key], threshold_critical[key])
+                elif key in threshold_warning and None in threshold_critical:
+                    ok = ok and comparator(threshold_warning[key], threshold_critical[None])
+                elif key in threshold_critical and None in threshold_warning:
+                    ok = ok and comparator(threshold_warning[None], threshold_critical[key])
+
+            return ok
+
         if options.threshold_warning and options.threshold_critical:
-            if options.mode != 'subscription' and options.threshold_critical <= options.threshold_warning:
+            if options.mode != 'subscription' and not compare_thresholds(options.threshold_warning, options.threshold_critical, lambda w,c: w<=c):
                 p.error("Critical value must be greater than warning value")
-            elif options.mode == 'subscription' and options.threshold_critical >= options.threshold_warning:
+            elif options.mode == 'subscription' and not compare_thresholds(options.threshold_warning, options.threshold_critical, lambda w,c: w>=c):
                 p.error("Critical value must be lower than warning value")
 
         self.options = options
