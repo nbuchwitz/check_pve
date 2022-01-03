@@ -56,9 +56,10 @@ pveum user token add monitoring@pve monitoring
 
 Please save the token secret as there isn't any way to fetch it at a later point.
 
-Assign role `monitoring` to token `monitoring`:
+Assign role `monitoring` to token `monitoring` and the user `monitoring@pve`:
 
 ```
+pveum acl modify / --roles Monitoring --user 'monitoring@pve'
 pveum acl modify / --roles Monitoring --tokens 'monitoring@pve!monitoring'
 ```
 
