@@ -24,6 +24,7 @@
 # ------------------------------------------------------------------------------
 
 import sys
+import re
 
 try:
     from enum import Enum
@@ -42,6 +43,44 @@ class CheckState(Enum):
     WARNING = 1
     CRITICAL = 2
     UNKNOWN = 3
+
+
+class CheckThreshold:
+    def __init__(self, value: float):
+        self.value = value
+
+    def __eq__(self, other):
+        return self.value == other.value
+
+    def __lt__(self, other):
+        return self.value < other.value
+
+    def __gt__(self, other):
+        return self.value > other.value
+
+    def check(self, value: float, lower: bool = False):
+        if lower:
+            return value < self.value
+        else:
+            return value > self.value
+
+    @staticmethod
+    def threshold_type(arg: str):
+        thresholds = {}
+
+        try:
+            thresholds[None] = CheckThreshold(float(arg))
+        except:
+            for t in arg.split(','):
+                m = re.match("([a-z_0-9]+):([0-9.]+)", t)
+
+                if m:
+                    thresholds[m.group(1)] = CheckThreshold(float(m.group(2)))
+                else:
+                    raise argparse.ArgumentTypeError(
+                        "invalid threshold format: {}".format(t))
+
+        return thresholds
 
 
 class CheckPVE:
@@ -172,7 +211,8 @@ class CheckPVE:
                             .format(vm_type, vm['name'], expected_state, vm['node'])
 
                 if vm['status'] == 'running' and not only_status:
-                    self.add_perfdata("cpu", round(vm['cpu'] * 100, 2))
+                    cpu = round(vm['cpu'] * 100, 2)
+                    self.add_perfdata("cpu", cpu)
 
                     if self.options.values_mb:
                         memory = vm['mem'] / 1024 / 1024
@@ -182,7 +222,7 @@ class CheckPVE:
                         memory = self.get_value(vm['mem'], vm['maxmem'])
                         self.add_perfdata("memory", memory)
 
-                    self.check_thresholds(memory, message=self.check_message)
+                    self.check_thresholds({"cpu": cpu, "memory": memory}, message=self.check_message)
 
                 found = True
                 break
@@ -504,12 +544,20 @@ class CheckPVE:
         self.check_api_value(url, 'IO wait is', key='wait', perfkey='wait')
 
     def check_thresholds(self, value, message, **kwargs):
-        if kwargs.get('lowerValue', False):
-            is_warning = self.options.threshold_warning and value < float(self.options.threshold_warning)
-            is_critical = self.options.threshold_critical and value < float(self.options.threshold_critical)
-        else:
-            is_warning = self.options.threshold_warning and value > float(self.options.threshold_warning)
-            is_critical = self.options.threshold_critical and value > float(self.options.threshold_critical)
+        is_warning = False
+        is_critical = False
+
+        if not isinstance(value, dict):
+            value = { None: value }
+
+        for metric, value in value.items():
+            value_warning = self.threshold_warning(metric)
+            if value_warning is not None:
+                is_warning = is_warning or value_warning.check(value, kwargs.get('lowerValue', False))
+
+            value_critical = self.threshold_critical(metric)
+            if value_critical is not None:
+                is_critial = is_critial or value_critical.check(value, kwargs.get('lowerValue', False))
 
         if is_critical:
             self.check_result = CheckState.CRITICAL
@@ -519,6 +567,12 @@ class CheckPVE:
             self.check_message = kwargs.get('messageWarning', message)
         else:
             self.check_message = message
+
+    def threshold_warning(self, name: str):
+        return self.options.threshold_warning.get(name, self.options.threshold_warning.get(None, None))
+
+    def threshold_critical(self, name: str):
+        return self.options.threshold_critical.get(name, self.options.threshold_critical.get(None, None))
 
     @staticmethod
     def get_value(value, total=None):
@@ -536,15 +590,16 @@ class CheckPVE:
 
         perfdata = '{}={}{}'.format(name, value, unit)
 
-        if self.options.threshold_warning and (self.options.values_mb == (unit == 'MB')):
-            perfdata += ';{}'.format(self.options.threshold_warning)
-        else:
-            perfdata += ';'
+        threshold_warning = self.threshold_warning(name)
+        threshold_critical = self.threshold_critical(name)
 
-        if self.options.threshold_critical and (self.options.values_mb == (unit == 'MB')):
-            perfdata += ';{}'.format(self.options.threshold_critical)
-        else:
-            perfdata += ';'
+        perfdata += ';'
+        if threshold_warning:
+            perfdata += str(threshold_warning.value)
+
+        perfdata += ';'
+        if threshold_critical:
+            perfdata += str(threshold_critical.value)
 
         if 'max' in kwargs:
             perfdata += ';{}'.format(kwargs.get('max'))
@@ -664,10 +719,10 @@ class CheckPVE:
         check_opts.add_argument('--ignore-disk', dest='ignore_disks', action='append', metavar='NAME',
                                 help='Ignore disk NAME in health check', default=[])
 
-        check_opts.add_argument('-w', '--warning', dest='threshold_warning', type=float,
-                                help='Warning threshold for check value')
-        check_opts.add_argument('-c', '--critical', dest='threshold_critical', type=float,
-                                help='Critical threshold for check value')
+        check_opts.add_argument('-w', '--warning', dest='threshold_warning', type=CheckThreshold.threshold_type,
+                                default={}, help='Warning threshold for check value')
+        check_opts.add_argument('-c', '--critical', dest='threshold_critical', type=CheckThreshold.threshold_type,
+                                default={}, help='Critical threshold for check value')
         check_opts.add_argument('-M', dest='values_mb', action='store_true', default=False,
                                 help='Values are shown in MB (if available). Thresholds are also treated as MB values')
         check_opts.add_argument('-V', '--min-version', dest='min_version', type=str,
