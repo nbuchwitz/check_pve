@@ -168,8 +168,8 @@ class CheckPVE:
                             .format(vm_type, vm['name'], expected_state, vm['node'], self.options.node)
                         self.check_result = CheckState.WARNING
                     else:
-                        self.check_message = "{} '{}' on node '{}' is {}" \
-                            .format(vm_type, vm['name'], vm['node'], expected_state)
+                        self.check_message = "{} '{}' is {} on node '{}'" \
+                            .format(vm_type, vm['name'], expected_state, vm['node'])
 
                 if vm['status'] == 'running' and not only_status:
                     self.add_perfdata("cpu", round(vm['cpu'] * 100, 2))
@@ -676,12 +676,12 @@ class CheckPVE:
 
         options = p.parse_args()
 
-        if not options.node and options.mode not in ['cluster', 'vm', 'version', 'ceph-health', 'zfs-health']:
+        if not options.node and options.mode not in ['cluster', 'vm', 'vm_status', 'version', 'ceph-health', 'zfs-health']:
             p.print_usage()
             message = "{}: error: --mode {} requires node name (--node)".format(p.prog, options.mode)
             self.output(CheckState.UNKNOWN, message)
 
-        if not options.vmid and not options.name and options.mode == 'vm':
+        if not options.vmid and not options.name and options.mode in ('vm', 'vm_status'):
             p.print_usage()
             message = "{}: error: --mode {} requires either vm name (--name) or id (--vmid)".format(p.prog,
                                                                                                     options.mode)
