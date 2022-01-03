@@ -422,11 +422,15 @@ class CheckPVE:
                     key += '_{}'.format(pool['name'])
                 self.add_perfdata(key, pool['frag'])
 
-                if self.options.threshold_critical is not None and pool['frag'] > float(
-                        self.options.threshold_critical):
+                threshold_name = "fragmentation_{}".format(pool['name'])
+                threshold_warning = self.threshold_warning(threshold_name)
+                threshold_critical = self.threshold_critical(threshold_name)
+
+                if threshold_critical is not None and pool['frag'] > float(
+                        threshold_critical.value):
                     critical.append(pool)
-                elif self.options.threshold_warning is not None and pool['frag'] > float(
-                        self.options.threshold_warning):
+                elif threshold_warning is not None and pool['frag'] > float(
+                        threshold_warning.value):
                     warnings.append(pool)
 
         if not found:
