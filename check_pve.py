@@ -676,7 +676,7 @@ class CheckPVE:
 
         options = p.parse_args()
 
-        if not options.node and options.mode not in ['cluster', 'vm', 'vm_status', 'version', 'ceph-health', 'zfs-health']:
+        if not options.node and options.mode not in ['cluster', 'vm', 'vm_status', 'version', 'ceph-health']:
             p.print_usage()
             message = "{}: error: --mode {} requires node name (--node)".format(p.prog, options.mode)
             self.output(CheckState.UNKNOWN, message)
