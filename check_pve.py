@@ -720,9 +720,9 @@ class CheckPVE:
                                 help='Ignore disk NAME in health check', default=[])
 
         check_opts.add_argument('-w', '--warning', dest='threshold_warning', type=CheckThreshold.threshold_type,
-                                default={}, help='Warning threshold for check value')
+                                default={}, help='Warning threshold for check value. Mutiple thresholds with name:value,name:value')
         check_opts.add_argument('-c', '--critical', dest='threshold_critical', type=CheckThreshold.threshold_type,
-                                default={}, help='Critical threshold for check value')
+                                default={}, help='Critical threshold for check value. Mutiple thresholds with name:value,name:value')
         check_opts.add_argument('-M', dest='values_mb', action='store_true', default=False,
                                 help='Values are shown in MB (if available). Thresholds are also treated as MB values')
         check_opts.add_argument('-V', '--min-version', dest='min_version', type=str,

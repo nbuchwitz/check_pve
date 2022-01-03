@@ -120,9 +120,9 @@ Check Options:
                         Ignore service NAME in checks
   --ignore-disk NAME    Ignore disk NAME in health check
   -w THRESHOLD_WARNING, --warning THRESHOLD_WARNING
-                        Warning threshold for check value
+                        Warning threshold for check value. Mutiple thresholds with name:value,name:value
   -c THRESHOLD_CRITICAL, --critical THRESHOLD_CRITICAL
-                        Critical threshold for check value
+                        Critical threshold for check value. Mutiple thresholds with name:value,name:value
   -M                    Values are shown in MB (if available). Thresholds are also treated as MB values
   -V MIN_VERSION, --min-version MIN_VERSION
                         The minimal pve version to check for. Any version lower than this will return CRITICAL.
@@ -269,6 +269,15 @@ WARNING - Fragmentation of ZFS pool 'diskpool' is above thresholds: 50 %|fragmen
 ```
 
 ## FAQ
+
+### Individual thresholds per metric
+
+You can either specify a threshold for warning or critical which is applied to all metrics or define individual thresholds like this (`name:value,name:value,...`):
+
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m vm --name test-vm -w memory:50 -c cpu:50,memory:80
+OK - VM 'test-vm' is running on 'node1'|cpu=1.85%;50.0; memory=40.33%;50.0;80.0
+```
 
 ### Could not connect to PVE API: Failed to resolve hostname
 
