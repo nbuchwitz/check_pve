@@ -767,14 +767,14 @@ class CheckPVE:
 
         self.parse_args()
 
+        if self.options.api_insecure:
+            # disable urllib3 warning about insecure requests
+            requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
+
         if self.options.api_password is not None:
             self.__cookies['PVEAuthCookie'] = self.get_ticket()
         elif self.options.api_token is not None:
             self.__headers["Authorization"] = "PVEAPIToken={}!{}".format(self.options.api_user, self.options.api_token)
-
-        if self.options.api_insecure:
-            # disable urllib3 warning about insecure requests
-            requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 pve = CheckPVE()
 pve.check()
