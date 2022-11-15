@@ -30,6 +30,19 @@ pkg install python3 py39-requests py39-packaging
 pip3 install -r requirements.txt
 ```
 
+**Installation as Docker container**
+```
+docker build -t check_pve .
+```
+After this, you can start the container like so:
+```
+docker run -d --name check_pve --rm check_pve
+```
+The container will keep running without having the need for any of the requirements listed above (for environments that do not support this).
+Running a check is as simple as:
+```
+docker exec check_pve python check_pve.py ....rest of the default arguments listed below....
+```
 
 ### Create a API user in Proxmox VE
 
