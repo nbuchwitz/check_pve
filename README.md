@@ -50,7 +50,7 @@ Create a role named ``Monitoring`` and assign necessary privileges:
 
 ```
 pveum roleadd Monitoring
-pveum rolemod Monitoring --privs VM.Monitor,Sys.Audit,Datastore.Audit,VM.Audit
+pveum rolemod Monitoring --privs VM.Monitor,Sys.Audit,Sys.Modify,Datastore.Audit,VM.Audit
 ```
 
 Create a user named ``monitoring`` and set password:
