@@ -88,6 +88,16 @@ class CheckThreshold:
 
         return thresholds
 
+class Message:
+    def __init__(self, message, result, perfdata):
+        self.message = message
+        self.result = result
+        self.perfdata = perfdata
+
+    def __eq__(self, other):
+        return self.message == other.message and \
+               self.result == other.result and \
+               self.perfdata == other.perfdata
 
 class CheckPVE:
     VERSION = '1.2.2'
@@ -101,20 +111,57 @@ class CheckPVE:
             "KiB": 2**10,
             "B": 1
         }
+    message_store = []
+    multi_check_result = None
+
+    def store_message(self):
+        # Only add information if it actually contains content
+        if self.check_result == CheckState.OK and not self.check_message and not self.get_perfdata():
+            return
+        message = Message(self.check_message, self.check_result, self.get_perfdata())
+
+        # Only add message if it was not already added previously
+        if not message in self.message_store:
+            self.message_store.append(message)
+
+        # Clear up everything for the next check in line
+        self.perfdata = []
+        self.check_result = CheckState.OK
+        self.check_message = ""
 
     def check_output(self):
-        message = self.check_message
-        if self.perfdata:
-            message += self.get_perfdata()
+        @staticmethod
+        def join_message(message, perfdata):
+            ret = message
+            if perfdata:
+                ret += perfdata
+            return ret
 
+        for entry in self.message_store[:-1]:
+            message = join_message(entry.message, entry.perfdata)
+            self.print_only_output(entry.result, message)
+
+        # Extract the highest CheckState value. This value will be used as exit code if present.
+        self.multi_check_result = max([ message.result.value for message in self.message_store])
+
+        # Construct message for last check
+        last_message = self.message_store[-1]
+        message = join_message(last_message.message, last_message.perfdata)
+        # Call output() to exit check_pve
         self.output(self.check_result, message)
 
     @staticmethod
-    def output(rc, message):
+    def print_only_output(rc, message):
         prefix = rc.name
         message = '{} - {}'.format(prefix, message)
 
         print(message)
+
+    def output(self, rc, message):
+        self.print_only_output(rc, message)
+
+        if self.multi_check_result:
+            sys.exit(self.multi_check_result)
         sys.exit(rc.value)
 
     def get_url(self, command):
@@ -196,6 +243,17 @@ class CheckPVE:
 
         self.check_thresholds(value, message)
 
+
+    def check_all_vms(self, resource_type):
+        url = self.get_url('cluster/resources', )
+        data = self.request(url, params={'type': 'vm'})
+
+        for entry in data:
+            if entry['type'] == resource_type:
+                self.check_vm_status(idx=entry['vmid'])
+                self.store_message()
+
+
     def check_vm_status(self, idx, **kwargs):
         url = self.get_url('cluster/resources', )
         data = self.request(url, params={'type': 'vm'})
@@ -232,12 +290,19 @@ class CheckPVE:
                     if self.options.values_mb:
                         memory = self.scale_value(vm['mem'])
                         self.add_perfdata("memory", memory, unit=self.options.unit, max=self.scale_value(vm['maxmem']))
-
+                        if 'vm_storage' in self.options.checks:
+                            disk = self.scale_value(vm['disk'])
+                            self.add_perfdata("disk", disk, unit=self.options.unit, max=self.scale_value(vm['maxdisk']))
                     else:
                         memory = self.get_value(vm['mem'], vm['maxmem'])
                         self.add_perfdata("memory", memory)
+                        if 'vm_storage' in self.options.checks:
+                            disk = self.get_value(vm['disk'], vm['maxdisk'])
+                            self.add_perfdata("disk", disk)
 
                     self.check_thresholds({"cpu": cpu, "memory": memory}, message=self.check_message)
+                    if 'vm_storage' in self.options.checks:
+                        self.check_thresholds({"disk": disk}, message=self.check_message)
 
                 found = True
                 break
@@ -642,51 +707,58 @@ class CheckPVE:
     def check(self):
         self.check_result = CheckState.OK
 
-        if self.options.mode == 'cluster':
-            self.check_cluster_status()
-        elif self.options.mode == 'version':
-            self.check_version()
-        elif self.options.mode == 'memory':
-            self.check_memory()
-        elif self.options.mode == 'swap':
-            self.check_swap()
-        elif self.options.mode == 'io_wait':
-            self.check_io_wait()
-        elif self.options.mode == 'disk-health':
-            self.check_disks()
-        elif self.options.mode == 'cpu':
-            self.check_cpu()
-        elif self.options.mode == 'services':
-            self.check_services()
-        elif self.options.mode == 'updates':
-            self.check_updates()
-        elif self.options.mode == 'subscription':
-            self.check_subscription()
-        elif self.options.mode == 'storage':
-            self.check_storage(self.options.name)
-        elif self.options.mode in ['vm', 'vm_status']:
-            only_status = self.options.mode == 'vm_status'
+        for mode in self.options.mode:
+            if mode == 'cluster':
+                self.check_cluster_status()
+            elif mode == 'version':
+                self.check_version()
+            elif mode == 'memory':
+                self.check_memory()
+            elif mode == 'swap':
+                self.check_swap()
+            elif mode == 'io_wait':
+                self.check_io_wait()
+            elif mode == 'disk-health':
+                self.check_disks()
+            elif mode == 'cpu':
+                self.check_cpu()
+            elif mode == 'services':
+                self.check_services()
+            elif mode == 'updates':
+                self.check_updates()
+            elif mode == 'subscription':
+                self.check_subscription()
+            elif mode == 'storage':
+                self.check_storage(self.options.name)
+            elif mode in ['vm', 'vm_status']:
+                only_status = mode == 'vm_status'
 
-            if self.options.name:
-                idx = self.options.name
-            else:
-                idx = self.options.vmid
+                if self.options.name:
+                    idx = self.options.name
+                else:
+                    idx = self.options.vmid
 
-            if self.options.expected_vm_status:
-                self.check_vm_status(idx, expected_state=self.options.expected_vm_status, only_status=only_status)
+                if self.options.expected_vm_status:
+                    self.check_vm_status(idx, expected_state=self.options.expected_vm_status, only_status=only_status)
+                else:
+                    self.check_vm_status(idx, only_status=only_status)
+            elif mode == 'all_vms':
+                self.check_all_vms('qemu')
+            elif mode == 'all_lxcs':
+                self.check_all_vms('lxc')
+            elif mode == 'replication':
+                self.check_replication()
+            elif mode == 'ceph-health':
+                self.check_ceph_health()
+            elif mode == 'zfs-health':
+                self.check_zfs_health(self.options.name)
+            elif mode == 'zfs-fragmentation':
+                self.check_zfs_fragmentation(self.options.name)
             else:
-                self.check_vm_status(idx, only_status=only_status)
-        elif self.options.mode == 'replication':
-            self.check_replication()
-        elif self.options.mode == 'ceph-health':
-            self.check_ceph_health()
-        elif self.options.mode == 'zfs-health':
-            self.check_zfs_health(self.options.name)
-        elif self.options.mode == 'zfs-fragmentation':
-            self.check_zfs_fragmentation(self.options.name)
-        else:
-            message = "Check mode '{}' not known".format(self.options.mode)
-            self.output(CheckState.UNKNOWN, message)
+                message = "Check mode '{}' not known".format(mode)
+                self.output(CheckState.UNKNOWN, message)
+
+            self.store_message()
 
         self.check_output()
 
@@ -716,10 +788,16 @@ class CheckPVE:
         check_opts.add_argument("-m", "--mode",
                                 choices=(
                                     'cluster', 'version', 'cpu', 'memory', 'swap', 'storage', 'io_wait', 'updates', 'services',
-                                    'subscription', 'vm', 'vm_status', 'replication', 'disk-health', 'ceph-health',
+                                    'subscription', 'vm', 'vm_status', 'all_vms', 'all_lxcs', 'replication', 'disk-health', 'ceph-health',
                                     'zfs-health', 'zfs-fragmentation'),
                                 required=True,
+                                action='append',
                                 help="Mode to use.")
+
+        check_opts.add_argument('--checks', dest='checks',
+                                choices=('vm_storage'),
+                                action='append',
+                                help='Additional checks to perform.')
 
         check_opts.add_argument('-n', '--node', dest='node',
                                 help='Node to check (necessary for all modes except cluster and version)')
@@ -757,18 +835,18 @@ class CheckPVE:
 
         options = p.parse_args()
 
-        if not options.node and options.mode not in ['cluster', 'vm', 'vm_status', 'version', 'ceph-health']:
+        if not options.node and not set(options.mode).issubset(['cluster', 'vm', 'vm_status', 'version', 'ceph-health', 'all_lxcs', 'all_vms']):
             p.print_usage()
             message = "{}: error: --mode {} requires node name (--node)".format(p.prog, options.mode)
             self.output(CheckState.UNKNOWN, message)
 
-        if not options.vmid and not options.name and options.mode in ('vm', 'vm_status'):
+        if not options.vmid and not options.name and set(options.mode).issubset(['vm', 'vm_status']):
             p.print_usage()
             message = "{}: error: --mode {} requires either vm name (--name) or id (--vmid)".format(p.prog,
                                                                                                     options.mode)
             self.output(CheckState.UNKNOWN, message)
 
-        if not options.name and options.mode == 'storage':
+        if not options.name and set(options.mode).issubset(['storage']):
             p.print_usage()
             message = "{}: error: --mode {} requires storage name (--name)".format(p.prog, options.mode)
             self.output(CheckState.UNKNOWN, message)
@@ -787,9 +865,9 @@ class CheckPVE:
             return ok
 
         if options.threshold_warning and options.threshold_critical:
-            if options.mode != 'subscription' and not compare_thresholds(options.threshold_warning, options.threshold_critical, lambda w,c: w<=c):
+            if 'subscription' in options.mode and not compare_thresholds(options.threshold_warning, options.threshold_critical, lambda w,c: w<=c):
                 p.error("Critical value must be greater than warning value")
-            elif options.mode == 'subscription' and not compare_thresholds(options.threshold_warning, options.threshold_critical, lambda w,c: w>=c):
+            elif 'subscription' in options.mode and not compare_thresholds(options.threshold_warning, options.threshold_critical, lambda w,c: w>=c):
                 p.error("Critical value must be lower than warning value")
 
         self.options = options
