@@ -695,7 +695,7 @@ class CheckPVE:
 
         api_opts = p.add_argument_group('API Options')
 
-        api_opts.add_argument("-e", "--api-endpoint", required=True, help="PVE api endpoint hostname")
+        api_opts.add_argument("-e", "-H" "--api-endpoint", required=True, help="PVE api endpoint hostname")
         api_opts.add_argument("--api-port", required=False, help="PVE api endpoint port")
 
         api_opts.add_argument("-u", "--username", dest='api_user', required=True,
