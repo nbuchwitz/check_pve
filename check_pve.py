@@ -232,12 +232,16 @@ class CheckPVE:
                     if self.options.values_mb:
                         memory = self.scale_value(vm['mem'])
                         self.add_perfdata("memory", memory, unit=self.options.unit, max=self.scale_value(vm['maxmem']))
+                        disk = self.scale_value(vm['disk'])
+                        self.add_perfdata("disk", disk, unit=self.options.unit, max=self.scale_value(vm['maxdisk']))
 
                     else:
                         memory = self.get_value(vm['mem'], vm['maxmem'])
                         self.add_perfdata("memory", memory)
+                        disk = self.get_value(vm['disk'], vm['maxdisk'])
+                        self.add_perfdata("disk", disk)
 
-                    self.check_thresholds({"cpu": cpu, "memory": memory}, message=self.check_message)
+                    self.check_thresholds({"cpu": cpu, "memory": memory, "disk": disk}, message=self.check_message)
 
                 found = True
                 break
