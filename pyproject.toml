@@ -1,0 +1,20 @@
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
+lint.select = [
+    "ANN", # flake8-annotations
+    "B",   # flake8-bugbear
+    "D",   # pydocstyle
+    "E",   # pycodestyle
+    "F",   # Pyflakes
+    "Q",   # flake8-quotes
+]
+lint.ignore = [
+    "ANN101", # missing-type-self
+    "D107",   # undocumented-public-init
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
