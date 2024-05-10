@@ -205,7 +205,7 @@ class CheckPVE:
 
         found = False
         for vm in data:
-            if vm['name'] == idx or vm['vmid'] == idx:
+            if idx == vm.get("name", vm.get("vmid", None)):
                 # Check if VM (default) or LXC
                 vm_type = "VM"
                 if vm['type'] == 'lxc':
