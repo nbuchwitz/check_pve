@@ -545,6 +545,37 @@ class CheckPVE:
         else:
             self.check_message = "Your pve instance version '{}' ({}) is up to date".format(data['version'],
                                                                                             data['repoid'])
+    def check_vzdump_backup(self, name=None):
+        tasks_url = self.get_url('cluster/tasks')
+        tasks = self.request(tasks_url)
+        tasks = [t for t in tasks if t['type'] == 'vzdump']
+        # Filter by node id, if one is provided
+        if self.options.node is not None:
+            tasks = [t for t in tasks if t['node'] == self.options.node]
+        # Filter by timestamp, if provided
+        delta = self.threshold_critical('delta')
+        if delta is not None:
+            now = datetime.utcnow().timestamp()
+            tasks = [t for t in tasks if not delta.check(now - t['starttime'])]
+        # absent status = job still running
+        tasks = [t for t in tasks if 'status' in t]
+        failed = len([t for t in tasks if t['status'] != 'OK'])
+        success = len(tasks) - failed
+        self.check_message = '{} backup tasks successful, {} backup tasks failed'.format(success, failed)
+        if failed > 0:
+            self.check_result = CheckState.CRITICAL
+        else:
+            self.check_result = CheckState.OK
+        if delta is not None:
+            self.check_message += ' within the last {}s'.format(delta.value)
+
+        nbu_url = self.get_url('cluster/backup-info/not-backed-up')
+        not_backed_up = self.request(nbu_url)
+        if len(not_backed_up) > 0:
+            guest_ids = ' '.join([str(guest['vmid']) for guest in not_backed_up])
+            if self.check_result not in [CheckState.CRITICAL, CheckState.UNKNOWN]:
+                self.check_result = CheckState.WARNING
+            self.check_message += "\nThere are guests not covered by any backup schedule: {}".format(guest_ids)
 
     def check_memory(self):
         url = self.get_url('nodes/{}/status'.format(self.options.node))
@@ -684,6 +715,8 @@ class CheckPVE:
             self.check_zfs_health(self.options.name)
         elif self.options.mode == 'zfs-fragmentation':
             self.check_zfs_fragmentation(self.options.name)
+        elif self.options.mode == 'backup':
+            self.check_vzdump_backup(self.options.name)
         else:
             message = "Check mode '{}' not known".format(self.options.mode)
             self.output(CheckState.UNKNOWN, message)
@@ -717,12 +750,12 @@ class CheckPVE:
                                 choices=(
                                     'cluster', 'version', 'cpu', 'memory', 'swap', 'storage', 'io_wait', 'updates', 'services',
                                     'subscription', 'vm', 'vm_status', 'replication', 'disk-health', 'ceph-health',
-                                    'zfs-health', 'zfs-fragmentation'),
+                                    'zfs-health', 'zfs-fragmentation', 'backup'),
                                 required=True,
                                 help="Mode to use.")
 
         check_opts.add_argument('-n', '--node', dest='node',
-                                help='Node to check (necessary for all modes except cluster and version)')
+                                help='Node to check (necessary for all modes except cluster, version and backup)')
 
         check_opts.add_argument('--name', dest='name',
                                 help='Name of storage, vm, or container')
@@ -757,7 +790,7 @@ class CheckPVE:
 
         options = p.parse_args()
 
-        if not options.node and options.mode not in ['cluster', 'vm', 'vm_status', 'version', 'ceph-health']:
+        if not options.node and options.mode not in ['cluster', 'vm', 'vm_status', 'version', 'ceph-health', 'backup']:
             p.print_usage()
             message = "{}: error: --mode {} requires node name (--node)".format(p.prog, options.mode)
             self.output(CheckState.UNKNOWN, message)
