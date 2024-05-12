@@ -3,9 +3,9 @@
 
 # ------------------------------------------------------------------------------
 # check_pve.py - A check plugin for Proxmox Virtual Environment (PVE).
-# Copyright (C) 2018-2022  Nicolai Buchwitz <nb@tipi-net.de>
+# Copyright (C) 2018-2024  Nicolai Buchwitz <nb@tipi-net.de>
 #
-# Version: 1.2.2
+# Version: 1.3.0
 #
 # ------------------------------------------------------------------------------
 # This program is free software; you can redistribute it and/or
@@ -129,7 +129,7 @@ class CheckThreshold:
 class CheckPVE:
     """Check command for Proxmox VE."""
 
-    VERSION = "1.2.2"
+    VERSION = "1.3.0"
     API_URL = "https://{hostname}:{port}/api2/json/{command}"
     UNIT_SCALE = {
         "GB": 10**9,
