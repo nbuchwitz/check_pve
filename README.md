@@ -102,9 +102,9 @@ The ``icinga2`` folder contains the command definition and service examples for 
 
 ```
 usage: check_pve.py [-h] -e API_ENDPOINT [--api-port API_PORT] -u API_USER (-p API_PASSWORD | -t API_TOKEN) [-k] -m
-                    {cluster,version,cpu,memory,swap,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup}
-                    [-n NODE] [--name NAME] [--vmid VMID] [--expected-vm-status {running,stopped,paused}] [--ignore-vm-status] [--ignore-service NAME] [--ignore-disk NAME]
-                    [-w THRESHOLD_WARNING] [-c THRESHOLD_CRITICAL] [-M] [-V MIN_VERSION] [--unit {GB,MB,KB,GiB,MiB,KiB,B}]
+                    {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup} [-n NODE] [--name NAME]
+                    [--vmid VMID] [--expected-vm-status {running,stopped,paused}] [--ignore-vm-status] [--ignore-service NAME] [--ignore-disk NAME] [-w THRESHOLD_WARNING] [-c THRESHOLD_CRITICAL] [-M] [-V MIN_VERSION]
+                    [--unit {GB,MB,KB,GiB,MiB,KiB,B}]
 
 Check command for PVE hosts via API
 
@@ -124,7 +124,7 @@ API Options:
   -k, --insecure        Don't verify HTTPS certificate
 
 Check Options:
-  -m {cluster,version,cpu,memory,swap,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup}, --mode {cluster,version,cpu,memory,swap,storage,io_wait,updates,services,subscription,vm,vm_status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup}
+  -m {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup}, --mode {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup}
                         Mode to use.
   -n NODE, --node NODE  Node to check (necessary for all modes except cluster, version and backup)
   --name NAME           Name of storage, vm, or container
@@ -144,7 +144,6 @@ Check Options:
                         The minimal pve version to check for. Any version lower than this will return CRITICAL.
   --unit {GB,MB,KB,GiB,MiB,KiB,B}
                         Unit which is used for performance data and other values
-
 ```
 
 ## Check examples
