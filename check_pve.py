@@ -428,13 +428,13 @@ class CheckPVE:
         url = self.get_url(f"nodes/{self.options.node}/subscription")
         data = self.request(url)
 
-        if data["status"] == "NotFound":
+        if data["status"].lower() == "notfound":
             self.check_result = CheckState.WARNING
             self.check_message = "No valid subscription found"
-        if data["status"] == "Inactive":
+        if data["status"].lower() == "inactive":
             self.check_result = CheckState.CRITICAL
             self.check_message = "Subscription expired"
-        elif data["status"] == "Active":
+        elif data["status"].lower() == "active":
             subscription_due_date = data["nextduedate"]
             subscription_product_name = data["productname"]
 
