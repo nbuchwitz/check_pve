@@ -31,7 +31,7 @@ from typing import Callable, Dict, Optional, Union
 
 try:
     import argparse
-    from datetime import datetime
+    from datetime import datetime, timezone
     from enum import Enum
 
     import requests
@@ -677,7 +677,7 @@ class CheckPVE:
         # Filter by timestamp, if provided
         delta = self.threshold_critical("delta")
         if delta is not None:
-            now = datetime.now(datetime.UTC).timestamp()
+            now = datetime.now(timezone.utc).timestamp()
 
             tasks = [t for t in tasks if not delta.check(now - t["starttime"])]
 
