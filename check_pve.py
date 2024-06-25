@@ -1058,7 +1058,11 @@ class CheckPVE:
             message = f"{p.prog}: error: --mode {options.mode} requires node name (--node)"
             self.output(CheckState.UNKNOWN, message)
 
-        if not options.vmid and not options.name and options.mode in ("vm", "vm_status"):
+        if (
+            not options.vmid
+            and not options.name
+            and options.mode in ("vm", "vm_status", "vm-status")
+        ):
             p.print_usage()
             message = (
                 f"{p.prog}: error: --mode {options.mode} requires either "
