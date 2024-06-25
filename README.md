@@ -102,9 +102,9 @@ The ``icinga2`` folder contains the command definition and service examples for 
 
 ```
 usage: check_pve.py [-h] -e API_ENDPOINT [--api-port API_PORT] -u API_USER (-p API_PASSWORD | -t API_TOKEN) [-k] -m
-                    {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup} [-n NODE] [--name NAME]
-                    [--vmid VMID] [--expected-vm-status {running,stopped,paused}] [--ignore-vm-status] [--ignore-service NAME] [--ignore-disk NAME] [-w THRESHOLD_WARNING] [-c THRESHOLD_CRITICAL] [-M] [-V MIN_VERSION]
-                    [--unit {GB,MB,KB,GiB,MiB,KiB,B}]
+                    {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup}
+                    [-n NODE] [--name NAME] [--vmid VMID] [--expected-vm-status {running,stopped,paused}] [--ignore-vm-status] [--ignore-service NAME] [--ignore-disk NAME] [--ignore-pools NAME]
+                    [-w THRESHOLD_WARNING] [-c THRESHOLD_CRITICAL] [-M] [-V MIN_VERSION] [--unit {GB,MB,KB,GiB,MiB,KiB,B}]
 
 Check command for PVE hosts via API
 
@@ -135,6 +135,7 @@ Check Options:
   --ignore-service NAME
                         Ignore service NAME in checks
   --ignore-disk NAME    Ignore disk NAME in health check
+  --ignore-pools NAME   Ignore vms and containers in pool(s) NAME in checks
   -w THRESHOLD_WARNING, --warning THRESHOLD_WARNING
                         Warning threshold for check value. Mutiple thresholds with name:value,name:value
   -c THRESHOLD_CRITICAL, --critical THRESHOLD_CRITICAL
@@ -258,7 +259,7 @@ WARNING - Ceph Cluster is in warning state
 
 **Check ZFS pool health**
 ```
-./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m zfs-health -n pve 
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m zfs-health -n pve
 OK - All ZFS pools are healthy
 ```
 
