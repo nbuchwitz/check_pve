@@ -27,7 +27,7 @@
 
 import re
 import sys
-from typing import Callable, Dict, Optional, Union
+from typing import Callable, Dict, Optional, Union, List
 
 try:
     import argparse
@@ -126,6 +126,16 @@ class CheckThreshold:
         return thresholds
 
 
+class RequestError(Exception):
+    """Exception for request related errors."""
+
+    def __init__(self, message: str, rc: int) -> None:
+        self.message = message
+        self.rc = rc
+
+        super().__init__(self.message)
+
+
 class CheckPVE:
     """Check command for Proxmox VE."""
 
@@ -208,6 +218,9 @@ class CheckPVE:
             )
         else:
             message += f"HTTP error code was {response.status_code}"
+
+        if kwargs.get("raise_error", False):
+            raise RequestError(message, response.status_code)
 
         self.output(CheckState.UNKNOWN, message)
 
@@ -664,6 +677,26 @@ class CheckPVE:
                 f"Your PVE instance version '{data['version']}' ({data['repoid']}) is up to date"
             )
 
+    def _get_pool_members(self, pool: str) -> List[int]:
+        """Get a list of vmids, which are members of a given resource pool.
+
+        NOTE: The request needs the Pool.Audit permission!
+        """
+        members = []
+
+        try:
+            url = self.get_url(f"pools/{pool}")
+            pools = self.request(url, raise_error=True)
+            for pool in pools.get("members", []):
+                members.append(pool["vmid"])
+        except RequestError:
+            print(
+                f"Unable to fetch members of pool '{pool}'. "
+                "Check if the name is correct and the role has the 'Pool.Audit' permission"
+            )
+
+        return members
+
     def check_vzdump_backup(self, name: Optional[str] = None) -> None:
         """Check for failed vzdump backup jobs."""
         tasks_url = self.get_url("cluster/tasks")
@@ -696,13 +729,25 @@ class CheckPVE:
 
         nbu_url = self.get_url("cluster/backup-info/not-backed-up")
         not_backed_up = self.request(nbu_url)
+
         if len(not_backed_up) > 0:
-            guest_ids = " ".join([str(guest["vmid"]) for guest in not_backed_up])
-            if self.check_result not in [CheckState.CRITICAL, CheckState.UNKNOWN]:
-                self.check_result = CheckState.WARNING
-            self.check_message += (
-                f"\nThere are guests not covered by any backup schedule: {guest_ids}"
-            )
+            guest_ids = []
+
+            for guest in not_backed_up:
+                guest_ids.append(str(guest["vmid"]))
+
+            ignored_vmids = []
+            for pool in self.options.ignore_pools:
+                ignored_vmids += map(str, self._get_pool_members(pool))
+
+            remaining_not_backed_up = sorted(list(set(guest_ids) - set(ignored_vmids)))
+            if len(remaining_not_backed_up) > 0:
+                if self.check_result not in [CheckState.CRITICAL, CheckState.UNKNOWN]:
+                    self.check_result = CheckState.WARNING
+                    self.check_message += (
+                        "\nThere are unignored guests not covered by any backup schedule: "
+                        + ", ".join(remaining_not_backed_up)
+                    )
 
     def check_memory(self) -> None:
         """Check memory usage of Proxmox VE node."""
@@ -996,6 +1041,15 @@ class CheckPVE:
             action="append",
             metavar="NAME",
             help="Ignore disk NAME in health check",
+            default=[],
+        )
+
+        check_opts.add_argument(
+            "--ignore-pools",
+            dest="ignore_pools",
+            action="append",
+            metavar="NAME",
+            help="Ignore vms and containers in pool(s) NAME in checks",
             default=[],
         )
 
