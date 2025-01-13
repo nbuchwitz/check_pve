@@ -457,7 +457,7 @@ class CheckPVE:
 
             message = f"{subscription_product_name} is valid until {subscription_due_date}"
             message_warning_critical = (
-                "{subscription_product_name} will expire in {delta} days ({subscription_due_date})"
+                f"{subscription_product_name} will expire in {delta} days ({subscription_due_date})"
             )
 
             self.check_thresholds(
@@ -1120,7 +1120,7 @@ class CheckPVE:
             p.print_usage()
             message = (
                 f"{p.prog}: error: --mode {options.mode} requires either "
-                "vm name (--name) or id (--vmid)",
+                "vm name (--name) or id (--vmid)"
             )
             self.output(CheckState.UNKNOWN, message)
 
