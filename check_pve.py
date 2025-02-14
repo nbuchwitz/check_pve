@@ -3,9 +3,9 @@
 
 # ------------------------------------------------------------------------------
 # check_pve.py - A check plugin for Proxmox Virtual Environment (PVE).
-# Copyright (C) 2018-2024  Nicolai Buchwitz <nb@tipi-net.de>
+# Copyright (C) 2018-2025  Nicolai Buchwitz <nb@tipi-net.de>
 #
-# Version: 1.4.0
+# Version: 1.5.0
 #
 # ------------------------------------------------------------------------------
 # This program is free software; you can redistribute it and/or
@@ -139,7 +139,7 @@ class RequestError(Exception):
 class CheckPVE:
     """Check command for Proxmox VE."""
 
-    VERSION = "1.3.0"
+    VERSION = "1.5.0"
     API_URL = "https://{hostname}:{port}/api2/json/{command}"
     UNIT_SCALE = {
         "GB": 10**9,
@@ -734,11 +734,16 @@ class CheckPVE:
             guest_ids = []
 
             for guest in not_backed_up:
-                guest_ids.append(str(guest["vmid"]))
+                guest_ids.append(guest["vmid"])
 
             ignored_vmids = []
             for pool in self.options.ignore_pools:
-                ignored_vmids += map(str, self._get_pool_members(pool))
+                # ignore vms based on their membership of a certain pool
+                ignored_vmids += self._get_pool_members(pool)
+
+            if self.options.ignore_vmids:
+                # ignore vms based on their id
+                ignored_vmids = ignored_vmids + self.options.ignore_vmids
 
             remaining_not_backed_up = sorted(list(set(guest_ids) - set(ignored_vmids)))
             if len(remaining_not_backed_up) > 0:
@@ -746,7 +751,7 @@ class CheckPVE:
                     self.check_result = CheckState.WARNING
                     self.check_message += (
                         "\nThere are unignored guests not covered by any backup schedule: "
-                        + ", ".join(remaining_not_backed_up)
+                        + ", ".join(map(str, remaining_not_backed_up))
                     )
 
     def check_memory(self) -> None:
@@ -928,13 +933,16 @@ class CheckPVE:
         """Parse CLI arguments."""
         p = argparse.ArgumentParser(description="Check command for PVE hosts via API")
 
+        p.add_argument(
+            "--version", help="Show version of check command", action="store_true", default=False
+        )
+
         api_opts = p.add_argument_group("API Options")
 
         api_opts.add_argument(
             "-e",
             "-H",
             "--api-endpoint",
-            required=True,
             help="PVE api endpoint hostname or ip address (no additional data like paths)",
         )
         api_opts.add_argument("--api-port", required=False, help="PVE api endpoint port")
@@ -943,12 +951,11 @@ class CheckPVE:
             "-u",
             "--username",
             dest="api_user",
-            required=True,
             help="PVE api user (e.g. icinga2@pve or icinga2@pam, depending on which backend you "
             "have chosen in proxmox)",
         )
 
-        group = api_opts.add_mutually_exclusive_group(required=True)
+        group = api_opts.add_mutually_exclusive_group()
         group.add_argument("-p", "--password", dest="api_password", help="PVE API user password")
         group.add_argument(
             "-t",
@@ -995,7 +1002,6 @@ class CheckPVE:
                 "zfs-fragmentation",
                 "backup",
             ),
-            required=True,
             help="Mode to use.",
         )
 
@@ -1016,6 +1022,16 @@ class CheckPVE:
             "--expected-vm-status",
             choices=("running", "stopped", "paused"),
             help="Expected VM status",
+        )
+
+        check_opts.add_argument(
+            "--ignore-vmid",
+            dest="ignore_vmids",
+            metavar="VMID",
+            action="append",
+            help="Ignore VM with vmid in checks",
+            default=[],
+            type=int,
         )
 
         check_opts.add_argument(
@@ -1099,6 +1115,23 @@ class CheckPVE:
         )
 
         options = p.parse_args()
+
+        if options.version:
+            print(f"check_pve version {self.VERSION}")
+            sys.exit(0)
+
+        missing = []
+        if not options.api_endpoint:
+            missing.append("--api-endpoint")
+        if not options.api_user:
+            missing.append("--username")
+        if not (options.api_password or options.api_token):
+            missing.append("--password or --api-token")
+        if not options.mode:
+            missing.append("--mode")
+
+        if missing:
+            p.error(f"The following arguments are required: {', '.join(missing)}")
 
         if not options.node and options.mode not in [
             "cluster",
