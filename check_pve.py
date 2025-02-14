@@ -734,11 +734,16 @@ class CheckPVE:
             guest_ids = []
 
             for guest in not_backed_up:
-                guest_ids.append(str(guest["vmid"]))
+                guest_ids.append(guest["vmid"])
 
             ignored_vmids = []
             for pool in self.options.ignore_pools:
-                ignored_vmids += map(str, self._get_pool_members(pool))
+                # ignore vms based on their membership of a certain pool
+                ignored_vmids += self._get_pool_members(pool)
+
+            if self.options.ignore_vmids:
+                # ignore vms based on their id
+                ignored_vmids = ignored_vmids + self.options.ignore_vmids
 
             remaining_not_backed_up = sorted(list(set(guest_ids) - set(ignored_vmids)))
             if len(remaining_not_backed_up) > 0:
@@ -746,7 +751,7 @@ class CheckPVE:
                     self.check_result = CheckState.WARNING
                     self.check_message += (
                         "\nThere are unignored guests not covered by any backup schedule: "
-                        + ", ".join(remaining_not_backed_up)
+                        + ", ".join(map(str, remaining_not_backed_up))
                     )
 
     def check_memory(self) -> None:
@@ -1016,6 +1021,16 @@ class CheckPVE:
             "--expected-vm-status",
             choices=("running", "stopped", "paused"),
             help="Expected VM status",
+        )
+
+        check_opts.add_argument(
+            "--ignore-vmid",
+            dest="ignore_vmids",
+            metavar="VMID",
+            action="append",
+            help="Ignore VM with vmid in checks",
+            default=[],
+            type=int,
         )
 
         check_opts.add_argument(
