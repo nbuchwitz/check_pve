@@ -101,8 +101,8 @@ For further information about the Proxmox VE privilege system have a look into t
 The ``icinga2`` folder contains the command definition and service examples for use with Icinga2.
 
 ```
-usage: check_pve.py [-h] -e API_ENDPOINT [--api-port API_PORT] -u API_USER (-p API_PASSWORD | -t API_TOKEN) [-k] -m
-                    {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup}
+usage: check_pve.py [-h] [--version] [-e API_ENDPOINT] [--api-port API_PORT] [-u API_USER] [-p API_PASSWORD | -t API_TOKEN] [-k]
+                    [-m {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup}]
                     [-n NODE] [--name NAME] [--vmid VMID] [--expected-vm-status {running,stopped,paused}] [--ignore-vmid VMID] [--ignore-vm-status] [--ignore-service NAME] [--ignore-disk NAME]
                     [--ignore-pools NAME] [-w THRESHOLD_WARNING] [-c THRESHOLD_CRITICAL] [-M] [-V MIN_VERSION] [--unit {GB,MB,KB,GiB,MiB,KiB,B}]
 
@@ -110,6 +110,7 @@ Check command for PVE hosts via API
 
 options:
   -h, --help            show this help message and exit
+  --version             Show version of check command
 
 API Options:
   -e API_ENDPOINT, -H API_ENDPOINT, --api-endpoint API_ENDPOINT

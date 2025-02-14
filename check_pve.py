@@ -933,13 +933,16 @@ class CheckPVE:
         """Parse CLI arguments."""
         p = argparse.ArgumentParser(description="Check command for PVE hosts via API")
 
+        p.add_argument(
+            "--version", help="Show version of check command", action="store_true", default=False
+        )
+
         api_opts = p.add_argument_group("API Options")
 
         api_opts.add_argument(
             "-e",
             "-H",
             "--api-endpoint",
-            required=True,
             help="PVE api endpoint hostname or ip address (no additional data like paths)",
         )
         api_opts.add_argument("--api-port", required=False, help="PVE api endpoint port")
@@ -948,12 +951,11 @@ class CheckPVE:
             "-u",
             "--username",
             dest="api_user",
-            required=True,
             help="PVE api user (e.g. icinga2@pve or icinga2@pam, depending on which backend you "
             "have chosen in proxmox)",
         )
 
-        group = api_opts.add_mutually_exclusive_group(required=True)
+        group = api_opts.add_mutually_exclusive_group()
         group.add_argument("-p", "--password", dest="api_password", help="PVE API user password")
         group.add_argument(
             "-t",
@@ -1000,7 +1002,6 @@ class CheckPVE:
                 "zfs-fragmentation",
                 "backup",
             ),
-            required=True,
             help="Mode to use.",
         )
 
@@ -1114,6 +1115,23 @@ class CheckPVE:
         )
 
         options = p.parse_args()
+
+        if options.version:
+            print(f"check_pve version {self.VERSION}")
+            sys.exit(0)
+
+        missing = []
+        if not options.api_endpoint:
+            missing.append("--api-endpoint")
+        if not options.api_user:
+            missing.append("--username")
+        if not (options.api_password or options.api_token):
+            missing.append("--password or --api-token")
+        if not options.mode:
+            missing.append("--mode")
+
+        if missing:
+            p.error(f"The following arguments are required: {', '.join(missing)}")
 
         if not options.node and options.mode not in [
             "cluster",
