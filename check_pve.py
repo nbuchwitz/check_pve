@@ -1197,5 +1197,6 @@ class CheckPVE:
             self.__headers["Authorization"] = f"PVEAPIToken={token}"
 
 
-pve = CheckPVE()
-pve.check()
+if __name__ == "__main__":
+    pve = CheckPVE()
+    pve.check()
