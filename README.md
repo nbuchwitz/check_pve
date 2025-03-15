@@ -63,7 +63,7 @@ pveum useradd monitoring@pve --comment "The ICINGA 2 monitoring user"
 
 #### Use token based authorization (recommended)
 
-Create an API token named `monitoring` for the user `monitoring`:
+Create an API token named `monitoring` for the user `monitoring` with backend `pve`:
 
 ```
 pveum user token add monitoring@pve monitoring
@@ -71,13 +71,14 @@ pveum user token add monitoring@pve monitoring
 
 Please save the token secret as there isn't any way to fetch it at a later point.
 
-Assign role `monitoring` to token `monitoring` and the user `monitoring@pve`:
+Assign role `Monitoring` to token `monitoring` and the user `monitoring@pve`:
 
 ```
 pveum acl modify / --roles Monitoring --user 'monitoring@pve'
 pveum acl modify / --roles Monitoring --tokens 'monitoring@pve!monitoring'
 ```
 
+You can now use the check command like this: `./check_pve.py -u monitoring@pve -t monitoring=abcdef12-3456-7890-abcd-deadbeef1234 ...`
 
 #### Use password based authorization
 
@@ -121,7 +122,7 @@ API Options:
   -p API_PASSWORD, --password API_PASSWORD
                         PVE API user password
   -t API_TOKEN, --api-token API_TOKEN
-                        PVE API token (format: TOKEN_ID=TOKEN_SECRET
+                        PVE API token (format: TOKEN_ID=TOKEN_SECRET)
   -k, --insecure        Don't verify HTTPS certificate
 
 Check Options:

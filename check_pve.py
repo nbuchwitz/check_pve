@@ -961,7 +961,7 @@ class CheckPVE:
             "-t",
             "--api-token",
             dest="api_token",
-            help="PVE API token (format: TOKEN_ID=TOKEN_SECRET",
+            help="PVE API token (format: TOKEN_ID=TOKEN_SECRET)",
         )
 
         api_opts.add_argument(
