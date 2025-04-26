@@ -441,12 +441,23 @@ class CheckPVE:
         url = self.get_url(f"nodes/{self.options.node}/subscription")
         data = self.request(url)
 
-        if data["status"].lower() == "notfound":
+        # 'status' is an enum, values are documented in Proxmox's API viewer:
+        # https://pve.proxmox.com/pve-docs/api-viewer/#/nodes/{node}/subscription
+        if data["status"].lower() == "new":
+            self.check_result = CheckState.WARNING
+            self.check_message = "Subscription not yet checked"
+        elif data["status"].lower() == "notfound":
             self.check_result = CheckState.WARNING
             self.check_message = "No valid subscription found"
-        if data["status"].lower() == "inactive":
+        elif data["status"].lower() == "suspended":
+            self.check_result = CheckState.WARNING
+            self.check_message = "Subscription suspended"
+        elif data["status"].lower() == "expired":
             self.check_result = CheckState.CRITICAL
             self.check_message = "Subscription expired"
+        elif data["status"].lower() == "invalid":
+            self.check_result = CheckState.CRITICAL
+            self.check_message = "Subscription invalid"
         elif data["status"].lower() == "active":
             subscription_due_date = data["nextduedate"]
             subscription_product_name = data["productname"]
@@ -467,6 +478,9 @@ class CheckPVE:
                 messageCritical=message_warning_critical,
                 lowerValue=True,
             )
+        else:
+            self.check_result = CheckState.UNKNOWN
+            self.check_message = "PVE API returned unexpected status '{}'".format(data["status"])
 
     def check_updates(self) -> None:
         """Check for package updates on Proxmox VE node."""
