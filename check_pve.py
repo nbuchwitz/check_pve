@@ -27,6 +27,7 @@
 
 import re
 import sys
+import logging
 from typing import Callable, Dict, Optional, Union, List
 
 try:
@@ -205,6 +206,8 @@ class CheckPVE:
                 CheckState.UNKNOWN, "Could not connect to PVE API: Failed to resolve hostname"
             )
 
+        if self.options.http_debug:
+            print(response.json())
         if response.ok:
             return response.json()["data"]
 
@@ -1128,6 +1131,14 @@ class CheckPVE:
             help="Unit which is used for performance data and other values",
         )
 
+        api_opts.add_argument(
+            "--http-debug",
+            dest="http_debug",
+            action="store_true",
+            default=False,
+            help="Enable HTTP request/response debugging output",
+        )
+
         options = p.parse_args()
 
         if options.version:
@@ -1143,6 +1154,19 @@ class CheckPVE:
             missing.append("--password or --api-token")
         if not options.mode:
             missing.append("--mode")
+
+        if options.http_debug:
+            try:
+                import http.client as http_client
+            except ImportError:
+                import httplib as http_client
+            http_client.HTTPConnection.debuglevel = 2
+
+            logging.basicConfig()
+            logging.getLogger().setLevel(logging.DEBUG)
+            requests_log = logging.getLogger("requests.packages.urllib3")
+            requests_log.setLevel(logging.DEBUG)
+            requests_log.propagate = True
 
         if missing:
             p.error(f"The following arguments are required: {', '.join(missing)}")
