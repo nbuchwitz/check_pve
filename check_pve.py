@@ -351,6 +351,9 @@ class CheckPVE:
             if name in self.options.ignore_disks:
                 continue
 
+            if disk['serial'] in self.options.ignore_disks:
+                continue
+
             if disk["health"] == "UNKNOWN":
                 self.check_result = CheckState.WARNING
                 unknown.append({"serial": disk["serial"], "device": disk["devpath"]})
