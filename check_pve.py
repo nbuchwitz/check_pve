@@ -171,6 +171,9 @@ class CheckPVE:
         return self.API_URL.format(
             hostname=self.options.api_endpoint, command=command, port=self.options.api_port
         )
+    def get_file_line(self, filename: str) -> str:
+        """Read the first line of a file and return it without the newline"""
+        return open(filename, "r").readline().strip()
 
     def request(self, url: str, method: str = "get", **kwargs: Dict) -> Union[Dict, None]:
         """Execute request against Proxmox VE API and return json data."""
@@ -971,11 +974,18 @@ class CheckPVE:
 
         group = api_opts.add_mutually_exclusive_group()
         group.add_argument("-p", "--password", dest="api_password", help="PVE API user password")
+        group.add_argument("-P", "--password-file", dest="api_password_file", help="PVE API user password in a file")
         group.add_argument(
             "-t",
             "--api-token",
             dest="api_token",
             help="PVE API token (format: TOKEN_ID=TOKEN_SECRET)",
+        )
+        group.add_argument(
+            "-T",
+            "--api-token-file",
+            dest="api_token_file",
+            help="PVE API token contained in a file (format: TOKEN_ID=TOKEN_SECRET)",
         )
 
         api_opts.add_argument(
@@ -1139,7 +1149,7 @@ class CheckPVE:
             missing.append("--api-endpoint")
         if not options.api_user:
             missing.append("--username")
-        if not (options.api_password or options.api_token):
+        if not (options.api_password or options.api_password_file or options.api_token or options.api_token_file):
             missing.append("--password or --api-token")
         if not options.mode:
             missing.append("--mode")
@@ -1203,6 +1213,11 @@ class CheckPVE:
         if self.options.api_insecure:
             # disable urllib3 warning about insecure requests
             requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+
+        if self.options.api_token_file is not None:
+            self.options.api_token = self.get_file_line(self.options.api_token_file)
+        if self.options.api_password_file is not None:
+            self.options.api_password = self.get_file_line(self.options.api_password_file)
 
         if self.options.api_password is not None:
             self.__cookies["PVEAuthCookie"] = self.get_ticket()
