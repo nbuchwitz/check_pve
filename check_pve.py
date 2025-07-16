@@ -1150,7 +1150,7 @@ class CheckPVE:
         if not options.api_user:
             missing.append("--username")
         if not (options.api_password or options.api_password_file or options.api_token or options.api_token_file):
-            missing.append("--password or --api-token")
+            missing.append("--password, --api-password-file, --api-token or --api-token-file")
         if not options.mode:
             missing.append("--mode")
 
