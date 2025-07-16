@@ -1218,7 +1218,6 @@ class CheckPVE:
             self.options.api_token = self.get_file_line(self.options.api_token_file)
         if self.options.api_password_file is not None:
             self.options.api_password = self.get_file_line(self.options.api_password_file)
-
         if self.options.api_password is not None:
             self.__cookies["PVEAuthCookie"] = self.get_ticket()
         elif self.options.api_token is not None:
