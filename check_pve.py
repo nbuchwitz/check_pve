@@ -171,6 +171,7 @@ class CheckPVE:
         return self.API_URL.format(
             hostname=self.options.api_endpoint, command=command, port=self.options.api_port
         )
+
     def get_file_line(self, filename: str) -> str:
         """Read the first line of a file and return it without the newline"""
         return open(filename, "r").readline().strip()
@@ -974,7 +975,12 @@ class CheckPVE:
 
         group = api_opts.add_mutually_exclusive_group()
         group.add_argument("-p", "--password", dest="api_password", help="PVE API user password")
-        group.add_argument("-P", "--password-file", dest="api_password_file", help="PVE API user password in a file")
+        group.add_argument(
+            "-P",
+            "--password-file",
+            dest="api_password_file",
+            help="PVE API user password in a file",
+        )
         group.add_argument(
             "-t",
             "--api-token",
@@ -1149,7 +1155,12 @@ class CheckPVE:
             missing.append("--api-endpoint")
         if not options.api_user:
             missing.append("--username")
-        if not (options.api_password or options.api_password_file or options.api_token or options.api_token_file):
+        if not (
+            options.api_password
+            or options.api_password_file
+            or options.api_token
+            or options.api_token_file
+        ):
             missing.append("--password, --api-password-file, --api-token or --api-token-file")
         if not options.mode:
             missing.append("--mode")
