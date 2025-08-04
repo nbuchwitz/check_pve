@@ -104,7 +104,7 @@ The ``icinga2`` folder contains the command definition and service examples for 
 ```
 usage: check_pve.py [-h] [--version] [-e API_ENDPOINT] [--api-port API_PORT] [-u API_USER] [-p API_PASSWORD |
                     -P API_PASSWORD_FILE | -t API_TOKEN | -T API_TOKEN_FILE] [-k]
-                    [-m {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup}]
+                    [-m {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup,snapshot-age}]
                     [-n NODE] [--name NAME] [--vmid VMID] [--expected-vm-status {running,stopped,paused}]
                     [--ignore-vmid VMID] [--ignore-vm-status] [--ignore-service NAME] [--ignore-disk NAME]
                     [--ignore-pools NAME] [-w THRESHOLD_WARNING] [-c THRESHOLD_CRITICAL] [-M] [-V MIN_VERSION]
@@ -134,7 +134,7 @@ API Options:
   -k, --insecure        Don't verify HTTPS certificate
 
 Check Options:
-  -m, --mode {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup}
+  -m, --mode {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup,snapshot-age}
                         Mode to use.
   -n, --node NODE       Node to check (necessary for all modes except cluster, version and backup)
   --name NAME           Name of storage, vm, or container
@@ -317,6 +317,28 @@ OK - 2 backup tasks successful, 0 backup tasks failed within the last 86400.0s
 Ignore a VM by their id from backup check:
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m backup --ignore-vmid 123
+```
+
+**Check snapshots age**
+Check age of snapshots on all nodes (thresholds are specified in seconds):
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m snapshot-age -w 43200 -c 86400
+```
+You can filter by a specific node:
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m snapshot-age -n pve -w 43200 -c 86400
+```
+Or by VM/Container:
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m snapshot-age --name test-vm -w 43200 -c 86400
+```
+Or both:
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m snapshot-age -n pve --name test-vm -w 43200 -c 86400
+```
+You can also filter by VM/Container id:
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m snapshot-age -n pve --vmid 123 -w 43200 -c 86400
 ```
 
 ## FAQ
