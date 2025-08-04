@@ -772,6 +772,90 @@ class CheckPVE:
                         + ", ".join(map(str, remaining_not_backed_up))
                     )
 
+    def check_snapshot_age(self, idx: Optional[Union[str, int]]) -> None:
+        """Check age of snapshots."""
+        url = self.get_url(
+            "cluster/resources",
+        )
+        data = self.request(url, params={"type": "vm"})
+
+        warnings = []
+        criticals = []
+        snapshots_exist = False
+        found = False
+        for vm in data:
+            vm_type = "qemu"
+            if vm["type"] == "lxc":
+                vm_type = "lxc"
+            vm_name = vm.get("name", None)
+            vm_id = vm.get("vmid", None)
+
+            if not self.options.node:
+                node_name = vm.get("node", None)
+            else:
+                node_name = self.options.node
+            url = self.get_url(f"nodes/{node_name}/{vm_type}/{vm_id}/snapshot")
+            data = self.request(url)
+
+            for snapshot in data:
+                snapshot_name = snapshot.get("name", None)
+
+                if snapshot_name == "current":
+                    continue
+                snapshots_exist = True
+
+                threshold_name = f"snapshot_age_{vm_name}_{snapshot_name}"
+                threshold_warning = self.threshold_warning(threshold_name)
+                threshold_critical = self.threshold_critical(threshold_name)
+
+                snapshot_time = snapshot.get("snaptime", None)
+                snapshot_age = int(datetime.now(timezone.utc).timestamp()) - snapshot_time
+
+                if threshold_critical is not None and snapshot_age > int(threshold_critical.value):
+                    criticals.append([vm_id, vm_name, snapshot_name, snapshot_time])
+                elif threshold_warning is not None and snapshot_age > int(threshold_warning.value):
+                    warnings.append([vm_id, vm_name, snapshot_name, snapshot_time])
+
+            if idx and idx in (vm.get("name", None), vm.get("vmid", None)):
+                found = True
+                break
+
+        if idx and not found:
+            self.check_result = CheckState.UNKNOWN
+            self.check_message = f"VM or LXC '{idx}' not found"
+        elif not snapshots_exist:
+            self.check_result = CheckState.OK
+            if idx:
+                self.check_message = f"No snapshots of '{idx}' exist"
+            else:
+                self.check_message = "No snapshots exist"
+        else:
+            if idx:
+                self.check_message = f"Age of snapshots of '{idx}' is "
+            else:
+                self.check_message = "Age of snapshots is "
+            if criticals or warnings:
+                if criticals:
+                    self.check_result = CheckState.CRITICAL
+                else:
+                    self.check_result = CheckState.WARNING
+                self.check_message += "above thresholds"
+                for snapshot in criticals:
+                    snap_time = datetime.fromtimestamp(snapshot[3]).strftime("%Y-%m-%d %H:%M:%S")
+                    self.check_message += (
+                        f"\n{snapshot[0]} ({snapshot[1]}): snapshot "
+                        + f"'{snapshot[2]}' taken on {snap_time} is CRITICAL"
+                    )
+                for snapshot in warnings:
+                    snap_time = datetime.fromtimestamp(snapshot[3]).strftime("%Y-%m-%d %H:%M:%S")
+                    self.check_message += (
+                        f"\n{snapshot[0]} ({snapshot[1]}): snapshot "
+                        + f"'{snapshot[2]}' taken on {snap_time} is WARNING"
+                    )
+            else:
+                self.check_result = CheckState.OK
+                self.check_message += "OK"
+
     def check_memory(self) -> None:
         """Check memory usage of Proxmox VE node."""
         url = self.get_url(f"nodes/{self.options.node}/status")
@@ -941,6 +1025,13 @@ class CheckPVE:
             self.check_zfs_fragmentation(self.options.name)
         elif self.options.mode == "backup":
             self.check_vzdump_backup(self.options.name)
+        elif self.options.mode == "snapshot-age":
+            if self.options.name:
+                idx = self.options.name
+            else:
+                idx = self.options.vmid
+
+            self.check_snapshot_age(idx)
         else:
             message = f"Check mode '{self.options.mode}' not known"
             self.output(CheckState.UNKNOWN, message)
@@ -1031,6 +1122,7 @@ class CheckPVE:
                 "zfs-health",
                 "zfs-fragmentation",
                 "backup",
+                "snapshot-age",
             ),
             help="Mode to use.",
         )
@@ -1175,6 +1267,7 @@ class CheckPVE:
             "version",
             "ceph-health",
             "backup",
+            "snapshot-age",
         ]:
             p.print_usage()
             message = f"{p.prog}: error: --mode {options.mode} requires node name (--node)"
