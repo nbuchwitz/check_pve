@@ -102,10 +102,13 @@ For further information about the Proxmox VE privilege system have a look into t
 The ``icinga2`` folder contains the command definition and service examples for use with Icinga2.
 
 ```
-usage: check_pve.py [-h] [--version] [-e API_ENDPOINT] [--api-port API_PORT] [-u API_USER] [-p API_PASSWORD | -t API_TOKEN] [-k]
+usage: check_pve.py [-h] [--version] [-e API_ENDPOINT] [--api-port API_PORT] [-u API_USER] [-p API_PASSWORD |
+                    -P API_PASSWORD_FILE | -t API_TOKEN | -T API_TOKEN_FILE] [-k]
                     [-m {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup}]
-                    [-n NODE] [--name NAME] [--vmid VMID] [--expected-vm-status {running,stopped,paused}] [--ignore-vmid VMID] [--ignore-vm-status] [--ignore-service NAME] [--ignore-disk NAME]
-                    [--ignore-pools NAME] [-w THRESHOLD_WARNING] [-c THRESHOLD_CRITICAL] [-M] [-V MIN_VERSION] [--unit {GB,MB,KB,GiB,MiB,KiB,B}]
+                    [-n NODE] [--name NAME] [--vmid VMID] [--expected-vm-status {running,stopped,paused}]
+                    [--ignore-vmid VMID] [--ignore-vm-status] [--ignore-service NAME] [--ignore-disk NAME]
+                    [--ignore-pools NAME] [-w THRESHOLD_WARNING] [-c THRESHOLD_CRITICAL] [-M] [-V MIN_VERSION]
+                    [--unit {GB,MB,KB,GiB,MiB,KiB,B}]
 
 Check command for PVE hosts via API
 
@@ -114,21 +117,26 @@ options:
   --version             Show version of check command
 
 API Options:
-  -e API_ENDPOINT, -H API_ENDPOINT, --api-endpoint API_ENDPOINT
+  -e, -H, --api-endpoint API_ENDPOINT
                         PVE api endpoint hostname or ip address (no additional data like paths)
   --api-port API_PORT   PVE api endpoint port
-  -u API_USER, --username API_USER
-                        PVE api user (e.g. icinga2@pve or icinga2@pam, depending on which backend you have chosen in proxmox)
-  -p API_PASSWORD, --password API_PASSWORD
+  -u, --username API_USER
+                        PVE api user (e.g. icinga2@pve or icinga2@pam, depending on which backend you have chosen
+                        in proxmox)
+  -p, --password API_PASSWORD
                         PVE API user password
-  -t API_TOKEN, --api-token API_TOKEN
+  -P, --password-file API_PASSWORD_FILE
+                        PVE API user password in a file
+  -t, --api-token API_TOKEN
                         PVE API token (format: TOKEN_ID=TOKEN_SECRET)
+  -T, --api-token-file API_TOKEN_FILE
+                        PVE API token contained in a file (format: TOKEN_ID=TOKEN_SECRET)
   -k, --insecure        Don't verify HTTPS certificate
 
 Check Options:
-  -m {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup}, --mode {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup}
+  -m, --mode {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup}
                         Mode to use.
-  -n NODE, --node NODE  Node to check (necessary for all modes except cluster, version and backup)
+  -n, --node NODE       Node to check (necessary for all modes except cluster, version and backup)
   --name NAME           Name of storage, vm, or container
   --vmid VMID           ID of virtual machine or container
   --expected-vm-status {running,stopped,paused}
@@ -139,12 +147,13 @@ Check Options:
                         Ignore service NAME in checks
   --ignore-disk NAME    Ignore disk NAME in health check
   --ignore-pools NAME   Ignore vms and containers in pool(s) NAME in checks
-  -w THRESHOLD_WARNING, --warning THRESHOLD_WARNING
+  -w, --warning THRESHOLD_WARNING
                         Warning threshold for check value. Mutiple thresholds with name:value,name:value
-  -c THRESHOLD_CRITICAL, --critical THRESHOLD_CRITICAL
+  -c, --critical THRESHOLD_CRITICAL
                         Critical threshold for check value. Mutiple thresholds with name:value,name:value
-  -M                    Values are shown in the unit which is set with --unit (if available). Thresholds are also treated in this unit
-  -V MIN_VERSION, --min-version MIN_VERSION
+  -M                    Values are shown in the unit which is set with --unit (if available). Thresholds are also
+                        treated in this unit
+  -V, --min-version MIN_VERSION
                         The minimal pve version to check for. Any version lower than this will return CRITICAL.
   --unit {GB,MB,KB,GiB,MiB,KiB,B}
                         Unit which is used for performance data and other values
