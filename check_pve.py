@@ -794,6 +794,8 @@ class CheckPVE:
                 node_name = vm.get("node", None)
             else:
                 node_name = self.options.node
+            if node_name != vm.get("node", None):
+                continue
             url = self.get_url(f"nodes/{node_name}/{vm_type}/{vm_id}/snapshot")
             data = self.request(url)
 
