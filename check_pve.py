@@ -204,10 +204,27 @@ class CheckPVE:
             self.output(
                 CheckState.UNKNOWN, "Could not connect to PVE API: Certificate validation failed"
             )
-        except requests.exceptions.ConnectionError:
-            self.output(
-                CheckState.UNKNOWN, "Could not connect to PVE API: Failed to resolve hostname"
-            )
+        except requests.exceptions.ConnectionError as e:
+            # Older Python / requests combinations may wrap SSL certificate
+            # validation failures in ConnectionError instead of SSLError; inspect
+            # the exception text to determine the real reason.
+            msg = str(e).lower()
+            if "certificate verify failed" in msg or "ssl" in msg and "certificate" in msg:
+                self.output(
+                    CheckState.UNKNOWN, "Could not connect to PVE API: Certificate validation failed"
+                )
+            elif (
+                "name or service not known" in msg
+                or "failed to establish a new connection" in msg
+                or "failed to resolve" in msg
+                or "gaierror" in msg
+            ):
+                self.output(
+                    CheckState.UNKNOWN, "Could not connect to PVE API: Failed to resolve hostname"
+                )
+            else:
+                # Fallback to showing the underlying exception message for clarity
+                self.output(CheckState.UNKNOWN, f"Could not connect to PVE API: {str(e)}")
 
         if response.ok:
             return response.json()["data"]
