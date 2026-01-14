@@ -200,10 +200,12 @@ class CheckPVE:
                 self.output(CheckState.CRITICAL, f"Unsupport request method: {method}")
         except requests.exceptions.ConnectTimeout:
             self.output(CheckState.UNKNOWN, "Could not connect to PVE API: Connection timeout")
+            return None
         except requests.exceptions.SSLError:
             self.output(
                 CheckState.UNKNOWN, "Could not connect to PVE API: Certificate validation failed"
             )
+            return None
         except requests.exceptions.ConnectionError as e:
             # Older Python / requests combinations may wrap SSL certificate
             # validation failures in ConnectionError instead of SSLError; inspect
@@ -211,7 +213,8 @@ class CheckPVE:
             msg = str(e).lower()
             if "certificate verify failed" in msg or "ssl" in msg and "certificate" in msg:
                 self.output(
-                    CheckState.UNKNOWN, "Could not connect to PVE API: Certificate validation failed"
+                    CheckState.UNKNOWN,
+                    "Could not connect to PVE API: Certificate validation failed",
                 )
             elif (
                 "name or service not known" in msg
@@ -225,6 +228,7 @@ class CheckPVE:
             else:
                 # Fallback to showing the underlying exception message for clarity
                 self.output(CheckState.UNKNOWN, f"Could not connect to PVE API: {str(e)}")
+            return None
 
         if response.ok:
             return response.json()["data"]
@@ -543,6 +547,8 @@ class CheckPVE:
                 self.check_result = CheckState.WARNING
                 self.check_message = f"Cluster '{cluster}' is healthy, but {diff} node(s) offline'"
             else:
+                # Healthy cluster
+                self.check_result = CheckState.OK
                 self.check_message = f"Cluster '{cluster}' is healthy'"
 
             self.add_perfdata("nodes_total", node_count, unit="")
@@ -695,10 +701,14 @@ class CheckPVE:
         """Check PVE version."""
         url = self.get_url("version")
         data = self.request(url)
-        if not data["version"]:
+
+        # Handle empty or malformed responses gracefully
+        if not data or "version" not in data or not data.get("version"):
             self.check_result = CheckState.UNKNOWN
             self.check_message = "Unable to determine pve version"
-        elif self.options.min_version and version.parse(self.options.min_version) > version.parse(
+            return
+
+        if self.options.min_version and version.parse(self.options.min_version) > version.parse(
             data["version"]
         ):
             self.check_result = CheckState.CRITICAL
@@ -708,6 +718,7 @@ class CheckPVE:
                 f"required version '{self.options.min_version}'"
             )
         else:
+            self.check_result = CheckState.OK
             self.check_message = (
                 f"Your PVE instance version '{data['version']}' ({data['repoid']}) is up to date"
             )
@@ -928,6 +939,7 @@ class CheckPVE:
             self.check_result = CheckState.WARNING
             self.check_message = kwargs.get("messageWarning", message)
         else:
+            self.check_result = CheckState.OK
             self.check_message = message
 
     def scale_value(self, value: Union[int, float]) -> float:
@@ -1057,8 +1069,12 @@ class CheckPVE:
 
         self.check_output()
 
-    def parse_args(self) -> None:
-        """Parse CLI arguments."""
+    def parse_args(self, argv: Optional[List[str]] = None) -> argparse.Namespace:
+        """Parse CLI arguments.
+
+        Accept an optional argv list for testing convenience and return the parsed
+        options namespace.
+        """
         p = argparse.ArgumentParser(description="Check command for PVE hosts via API")
 
         p.add_argument(
@@ -1255,7 +1271,7 @@ class CheckPVE:
             help="Unit which is used for performance data and other values",
         )
 
-        options = p.parse_args()
+        options = p.parse_args(argv)
 
         if options.version:
             print(f"check_pve version {self.VERSION}")
@@ -1291,6 +1307,7 @@ class CheckPVE:
             p.print_usage()
             message = f"{p.prog}: error: --mode {options.mode} requires node name (--node)"
             self.output(CheckState.UNKNOWN, message)
+            raise SystemExit(2)
 
         if (
             not options.vmid
@@ -1303,11 +1320,13 @@ class CheckPVE:
                 "vm name (--name) or id (--vmid)"
             )
             self.output(CheckState.UNKNOWN, message)
+            raise SystemExit(2)
 
         if not options.name and options.mode == "storage":
             p.print_usage()
             message = f"{p.prog}: error: --mode {options.mode} requires storage name (--name)"
             self.output(CheckState.UNKNOWN, message)
+            raise SystemExit(2)
 
         if options.threshold_warning and options.threshold_critical:
             if options.mode != "subscription" and not compare_thresholds(
@@ -1320,6 +1339,7 @@ class CheckPVE:
                 p.error("Critical value must be lower than warning value")
 
         self.options = options
+        return options
 
     def __init__(self) -> None:
         self.options = {}
