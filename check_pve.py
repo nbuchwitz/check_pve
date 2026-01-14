@@ -799,6 +799,82 @@ class CheckPVE:
                     f"All network interfaces on node '{self.options.node}' are healthy"
                 )
 
+    def check_task_queue(self) -> None:
+        """Check cluster task queue for running and failed tasks."""
+        url = self.get_url("cluster/tasks")
+        tasks = self.request(url)
+
+        if not tasks:
+            self.check_result = CheckState.UNKNOWN
+            self.check_message = "Could not fetch task queue data from API"
+            return
+
+        # Filter by node if specified
+        if self.options.node is not None:
+            tasks = [t for t in tasks if t.get("node") == self.options.node]
+
+        # Filter by time window if critical threshold is set
+        delta = self.threshold_critical("delta")
+        if delta is not None:
+            now = datetime.now(timezone.utc).timestamp()
+            tasks = [t for t in tasks if not delta.check(now - t.get("starttime", now))]
+
+        # Separate tasks by status
+        running_tasks = [t for t in tasks if "status" not in t]
+        completed_tasks = [t for t in tasks if "status" in t]
+        failed_tasks = [t for t in completed_tasks if t.get("status") != "OK"]
+
+        # Count tasks by type
+        task_types = {}
+        for task in running_tasks:
+            task_type = task.get("type", "unknown")
+            task_types[task_type] = task_types.get(task_type, 0) + 1
+
+        # Check against thresholds
+        warning_threshold = self.threshold_warning("running")
+        critical_threshold = self.threshold_critical("running")
+
+        running_count = len(running_tasks)
+        failed_count = len(failed_tasks)
+
+        # Build message
+        messages = []
+        if self.options.node:
+            messages.append(f"Node '{self.options.node}':")
+        else:
+            messages.append("Cluster:")
+
+        messages.append(f"{running_count} tasks running")
+
+        if task_types:
+            type_details = ", ".join(
+                [f"{count} {ttype}" for ttype, count in sorted(task_types.items())]
+            )
+            messages.append(f"({type_details})")
+
+        if failed_count > 0:
+            messages.append(f", {failed_count} tasks failed")
+
+        self.check_message = " ".join(messages)
+
+        # Add time window info if specified
+        if delta is not None:
+            self.check_message += f" within the last {delta.value}s"
+
+        # Determine check result
+        if failed_count > 0:
+            self.check_result = CheckState.WARNING
+        elif critical_threshold is not None and critical_threshold.check(running_count):
+            self.check_result = CheckState.CRITICAL
+        elif warning_threshold is not None and warning_threshold.check(running_count):
+            self.check_result = CheckState.WARNING
+        else:
+            self.check_result = CheckState.OK
+
+        # Add performance data
+        self.add_perfdata("running_tasks", running_count)
+        self.add_perfdata("failed_tasks", failed_count)
+
     def check_storage(self, name: str) -> None:
         """Check if storage exists and return usage."""
         url = self.get_url(f"nodes/{self.options.node}/storage")
@@ -1180,6 +1256,8 @@ class CheckPVE:
             self.check_snapshot_age(idx)
         elif self.options.mode == "network-status":
             self.check_network_status(self.options.name)
+        elif self.options.mode == "task-queue":
+            self.check_task_queue()
         else:
             message = f"Check mode '{self.options.mode}' not known"
             self.output(CheckState.UNKNOWN, message)
@@ -1276,6 +1354,7 @@ class CheckPVE:
                 "backup",
                 "snapshot-age",
                 "network-status",
+                "task-queue",
             ),
             help="Mode to use.",
         )
@@ -1431,6 +1510,7 @@ class CheckPVE:
             "ceph-health",
             "backup",
             "snapshot-age",
+            "task-queue",
         ]:
             p.print_usage()
             message = f"{p.prog}: error: --mode {options.mode} requires node name (--node)"
