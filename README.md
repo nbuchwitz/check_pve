@@ -121,7 +121,7 @@ options:
 
 API Options:
   -e, -H, --api-endpoint API_ENDPOINT
-                        PVE api endpoint hostname or ip address (no additional data like paths)
+                        PVE api endpoint hostname or IP address (no additional data like paths)
   --api-port API_PORT   PVE api endpoint port
   -u, --username API_USER
                         PVE api user (e.g. icinga2@pve or icinga2@pam, depending on which backend you have chosen
@@ -149,15 +149,15 @@ Check Options:
   --ignore-service NAME
                         Ignore service NAME in checks
   --ignore-disk NAME    Ignore disk NAME in health check
-  --ignore-pools NAME   Ignore vms and containers in pool(s) NAME in checks
+  --ignore-pools NAME   Ignore VMs and containers in pool(s) NAME in checks
   -w, --warning THRESHOLD_WARNING
-                        Warning threshold for check value. Mutiple thresholds with name:value,name:value
+                        Warning threshold for check value. Multiple thresholds with name:value,name:value
   -c, --critical THRESHOLD_CRITICAL
-                        Critical threshold for check value. Mutiple thresholds with name:value,name:value
+                        Critical threshold for check value. Multiple thresholds with name:value,name:value
   -M                    Values are shown in the unit which is set with --unit (if available). Thresholds are also
                         treated in this unit
   -V, --min-version MIN_VERSION
-                        The minimal pve version to check for. Any version lower than this will return CRITICAL.
+                        The minimum PVE version to check for. Any version lower than this will return CRITICAL.
   --unit {GB,MB,KB,GiB,MiB,KiB,B}
                         Unit which is used for performance data and other values
 ```

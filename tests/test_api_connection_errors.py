@@ -8,7 +8,10 @@ def test_sslerror_is_reported_as_certificate_issue(pve_instance):
     pve_instance.options.api_endpoint = "mock-endpoint"
     pve_instance.options.api_port = 8006
 
-    with patch("check_pve.requests.get", side_effect=requests.exceptions.SSLError("certificate verify failed")):
+    with patch(
+        "check_pve.requests.get",
+        side_effect=requests.exceptions.SSLError("certificate verify failed"),
+    ):
         pve_instance.request("https://mock-endpoint")
 
     pve_instance.output.assert_called_with(
@@ -53,7 +56,8 @@ def test_connectionerror_with_other_msg_falls_back_to_message(pve_instance):
     pve_instance.options.api_port = 8006
 
     with patch(
-        "check_pve.requests.get", side_effect=requests.exceptions.ConnectionError("some other error")
+        "check_pve.requests.get",
+        side_effect=requests.exceptions.ConnectionError("some other error"),
     ):
         pve_instance.request("https://mock-endpoint")
 
