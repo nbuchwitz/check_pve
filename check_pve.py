@@ -684,6 +684,121 @@ class CheckPVE:
             self.check_result = CheckState.UNKNOWN
             self.check_message = "Ceph Cluster is in unknown state"
 
+    def check_network_status(self, name: Optional[str] = None) -> None:
+        """Check network interface status and bond health."""
+        url = self.get_url(f"nodes/{self.options.node}/network")
+        data = self.request(url)
+
+        if not data:
+            self.check_result = CheckState.UNKNOWN
+            self.check_message = "Could not fetch network interface data from API"
+            return
+
+        interfaces_down = []
+        bonds_degraded = []
+        found = name is None
+
+        for iface in data:
+            iface_name = iface.get("iface", "")
+            iface_type = iface.get("type", "")
+
+            # Skip ignored interfaces
+            if iface_name in self.options.ignore_interfaces:
+                continue
+
+            # Check if this is the interface we're looking for (if name specified)
+            if name is not None:
+                if iface_name == name:
+                    found = True
+                else:
+                    # Skip if we're looking for a specific interface and this isn't it
+                    continue
+
+            # Check if interface is active
+            is_active = iface.get("active", 0)
+
+            # Check bond status
+            if iface_type == "bond":
+                bond_mode = iface.get("bond_mode", "")
+                slaves = iface.get("slaves", "").split() if iface.get("slaves") else []
+                bond_primary = iface.get("bond-primary", "")
+
+                # Count active slaves by checking if interfaces exist in data
+                active_slaves = []
+                for slave in slaves:
+                    slave_data = next((i for i in data if i.get("iface") == slave), None)
+                    if slave_data and slave_data.get("active", 0):
+                        active_slaves.append(slave)
+
+                # Bond is degraded if not all slaves are active
+                if len(active_slaves) < len(slaves) and len(slaves) > 0:
+                    bonds_degraded.append(
+                        {
+                            "name": iface_name,
+                            "mode": bond_mode,
+                            "expected": len(slaves),
+                            "active": len(active_slaves),
+                            "slaves": slaves,
+                            "active_slaves": active_slaves,
+                            "primary": bond_primary,
+                        }
+                    )
+
+                # Bond is down if no slaves are active
+                if not active_slaves and slaves:
+                    interfaces_down.append(
+                        {"name": iface_name, "type": iface_type, "reason": "No active bond members"}
+                    )
+
+            # Check if bridge/vlan/regular interface is down
+            elif iface_type in ("bridge", "vlan", "eth", "unknown") and not is_active:
+                # Only alert on bridge-ports and non-slave interfaces
+                if not iface.get("slave", 0):
+                    interfaces_down.append(
+                        {"name": iface_name, "type": iface_type, "reason": "Interface is down"}
+                    )
+
+        if name and not found:
+            self.check_result = CheckState.UNKNOWN
+            self.check_message = (
+                f"Network interface '{name}' not found on node '{self.options.node}'"
+            )
+            return
+
+        # Determine check result
+        if bonds_degraded or interfaces_down:
+            if interfaces_down:
+                self.check_result = CheckState.CRITICAL
+            else:
+                self.check_result = CheckState.WARNING
+
+            messages = []
+            if bonds_degraded:
+                for bond in bonds_degraded:
+                    msg = (
+                        f"Bond '{bond['name']}' degraded: {bond['active']}/{bond['expected']} "
+                        f"members active (mode: {bond['mode']})"
+                    )
+                    # Add primary member info for active-backup mode
+                    if bond.get("primary"):
+                        primary_active = bond["primary"] in bond["active_slaves"]
+                        primary_status = "active" if primary_active else "inactive"
+                        msg += f", primary: {bond['primary']} ({primary_status})"
+                    messages.append(msg)
+            if interfaces_down:
+                for iface in interfaces_down:
+                    messages.append(f"Interface '{iface['name']}' is down")
+
+            self.check_message = "\n".join(messages)
+        else:
+            self.check_result = CheckState.OK
+            if name:
+                self.check_message = f"Network interface '{name}' is healthy"
+            else:
+                self.check_message = (
+                    f"All network interfaces on node '{self.options.node}' are healthy"
+                )
+
     def check_storage(self, name: str) -> None:
         """Check if storage exists and return usage."""
         url = self.get_url(f"nodes/{self.options.node}/storage")
@@ -1063,6 +1178,8 @@ class CheckPVE:
                 idx = self.options.vmid
 
             self.check_snapshot_age(idx)
+        elif self.options.mode == "network-status":
+            self.check_network_status(self.options.name)
         else:
             message = f"Check mode '{self.options.mode}' not known"
             self.output(CheckState.UNKNOWN, message)
@@ -1158,6 +1275,7 @@ class CheckPVE:
                 "zfs-fragmentation",
                 "backup",
                 "snapshot-age",
+                "network-status",
             ),
             help="Mode to use.",
         )
@@ -1223,6 +1341,15 @@ class CheckPVE:
             action="append",
             metavar="NAME",
             help="Ignore VMs and containers in pool(s) NAME in checks",
+            default=[],
+        )
+
+        check_opts.add_argument(
+            "--ignore-interface",
+            dest="ignore_interfaces",
+            action="append",
+            metavar="NAME",
+            help="Ignore network interface NAME in network status check",
             default=[],
         )
 

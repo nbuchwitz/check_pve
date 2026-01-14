@@ -108,7 +108,7 @@ The `icinga2` folder contains the command definition and service examples for us
 ```
 usage: check_pve.py [-h] [--version] [-e API_ENDPOINT] [--api-port API_PORT] [-u API_USER] [-p API_PASSWORD |
                     -P API_PASSWORD_FILE | -t API_TOKEN | -T API_TOKEN_FILE] [-k]
-                    [-m {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup,snapshot-age}]
+                    [-m {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup,snapshot-age,network-status}]
                     [-n NODE] [--name NAME] [--vmid VMID] [--expected-vm-status {running,stopped,paused}]
                     [--ignore-vmid VMID] [--ignore-vm-status] [--ignore-service NAME] [--ignore-disk NAME]
                     [--ignore-pools NAME] [-w THRESHOLD_WARNING] [-c THRESHOLD_CRITICAL] [-M] [-V MIN_VERSION]
@@ -138,7 +138,7 @@ API Options:
   -k, --insecure        Don't verify HTTPS certificate
 
 Check Options:
-  -m, --mode {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup,snapshot-age}
+  -m, --mode {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup,snapshot-age,network-status}
                         Mode to use.
   -n, --node NODE       Node to check (necessary for all modes except cluster, version and backup)
   --name NAME           Name of storage, vm, or container
@@ -151,6 +151,8 @@ Check Options:
                         Ignore service NAME in checks
   --ignore-disk NAME    Ignore disk NAME in health check
   --ignore-pools NAME   Ignore VMs and containers in pool(s) NAME in checks
+  --ignore-interface NAME
+                        Ignore network interface NAME in network status check
   -w, --warning THRESHOLD_WARNING
                         Warning threshold for check value. Multiple thresholds with name:value,name:value
   -c, --critical THRESHOLD_CRITICAL
@@ -343,6 +345,32 @@ Or both:
 You can also filter by VM/Container ID:
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m snapshot-age -n pve --vmid 123 -w 43200 -c 86400
+```
+
+**Check network interface status**
+
+Check all network interfaces on a node:
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m network-status -n node1
+OK - All network interfaces on node 'node1' are healthy
+```
+
+Check specific interface (e.g., bond):
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m network-status -n node1 --name bond0
+OK - Network interface 'bond0' is healthy
+```
+
+Degraded bond example (one member down):
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m network-status -n node1 --name bond0
+WARNING - Bond 'bond0' degraded: 1/2 members active (mode: 802.3ad)
+```
+
+Ignore specific interfaces:
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m network-status -n node1 --ignore-interface vmbr1
+OK - All network interfaces on node 'node1' are healthy
 ```
 
 ## FAQ
