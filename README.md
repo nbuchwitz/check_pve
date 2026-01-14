@@ -52,8 +52,10 @@ Create a role named ``Monitoring`` and assign necessary privileges:
 
 ```
 pveum roleadd Monitoring
-pveum rolemod Monitoring --privs VM.Monitor,Sys.Audit,Sys.Modify,Datastore.Audit,VM.Audit
+pveum rolemod Monitoring --privs Sys.Audit,Sys.Modify,Datastore.Audit,VM.Audit
 ```
+
+**Important:** The `VM.Monitor` privilege was removed in Proxmox VE 9.0; on older versions it may still be required.
 
 Create a user named ``monitoring`` and set password:
 
