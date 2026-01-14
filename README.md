@@ -108,10 +108,10 @@ The `icinga2` folder contains the command definition and service examples for us
 ```
 usage: check_pve.py [-h] [--version] [-e API_ENDPOINT] [--api-port API_PORT] [-u API_USER] [-p API_PASSWORD |
                     -P API_PASSWORD_FILE | -t API_TOKEN | -T API_TOKEN_FILE] [-k]
-                    [-m {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup,snapshot-age,network-status}]
+                    [-m {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup,snapshot-age,network-status,task-queue}]
                     [-n NODE] [--name NAME] [--vmid VMID] [--expected-vm-status {running,stopped,paused}]
                     [--ignore-vmid VMID] [--ignore-vm-status] [--ignore-service NAME] [--ignore-disk NAME]
-                    [--ignore-pools NAME] [-w THRESHOLD_WARNING] [-c THRESHOLD_CRITICAL] [-M] [-V MIN_VERSION]
+                    [--ignore-pools NAME] [--ignore-interface NAME] [-w THRESHOLD_WARNING] [-c THRESHOLD_CRITICAL] [-M] [-V MIN_VERSION]
                     [--unit {GB,MB,KB,GiB,MiB,KiB,B}]
 
 Check command for PVE hosts via API
@@ -138,7 +138,7 @@ API Options:
   -k, --insecure        Don't verify HTTPS certificate
 
 Check Options:
-  -m, --mode {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup,snapshot-age,network-status}
+  -m, --mode {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup,snapshot-age,network-status,task-queue}
                         Mode to use.
   -n, --node NODE       Node to check (necessary for all modes except cluster, version and backup)
   --name NAME           Name of storage, vm, or container
@@ -371,6 +371,26 @@ Ignore specific interfaces:
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m network-status -n node1 --ignore-interface vmbr1
 OK - All network interfaces on node 'node1' are healthy
+```
+
+**Check task queue**
+
+Check cluster-wide task queue:
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m task-queue
+OK - Cluster: 2 tasks running (1 backup, 1 qmigrate)|running_tasks=2;; failed_tasks=0;;
+```
+
+Check task queue for specific node:
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m task-queue -n node1
+OK - Node 'node1': 1 tasks running (1 backup)|running_tasks=1;; failed_tasks=0;;
+```
+
+With thresholds for running tasks:
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m task-queue -w running:5 -c running:10
+WARNING - Cluster: 6 tasks running (3 backup, 2 qmigrate, 1 qmrestore)|running_tasks=6;5.0;10.0 failed_tasks=0;;
 ```
 
 ## FAQ
