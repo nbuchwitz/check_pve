@@ -60,7 +60,7 @@ def test_check_version(
             f"is lower than the min. required version '{min_version}'"
         )
     else:
-        expected_message = "Unable to determine pve version"
+        expected_message = "Unable to determine PVE version"
 
     assert expected_message in pve_instance.check_message
     assert pve_instance.check_result == expected_state

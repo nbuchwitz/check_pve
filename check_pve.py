@@ -705,7 +705,7 @@ class CheckPVE:
         # Handle empty or malformed responses gracefully
         if not data or "version" not in data or not data.get("version"):
             self.check_result = CheckState.UNKNOWN
-            self.check_message = "Unable to determine pve version"
+            self.check_message = "Unable to determine PVE version"
             return
 
         if self.options.min_version and version.parse(self.options.min_version) > version.parse(
@@ -1087,7 +1087,7 @@ class CheckPVE:
             "-e",
             "-H",
             "--api-endpoint",
-            help="PVE api endpoint hostname or ip address (no additional data like paths)",
+            help="PVE api endpoint hostname or IP address (no additional data like paths)",
         )
         api_opts.add_argument("--api-port", required=False, help="PVE api endpoint port")
 
@@ -1222,7 +1222,7 @@ class CheckPVE:
             dest="ignore_pools",
             action="append",
             metavar="NAME",
-            help="Ignore vms and containers in pool(s) NAME in checks",
+            help="Ignore VMs and containers in pool(s) NAME in checks",
             default=[],
         )
 
@@ -1232,7 +1232,8 @@ class CheckPVE:
             dest="threshold_warning",
             type=CheckThreshold.threshold_type,
             default={},
-            help="Warning threshold for check value. Mutiple thresholds with name:value,name:value",
+            help="Warning threshold for check value. "
+            "Multiple thresholds with name:value,name:value",
         )
         check_opts.add_argument(
             "-c",
@@ -1242,7 +1243,7 @@ class CheckPVE:
             default={},
             help=(
                 "Critical threshold for check value. "
-                "Mutiple thresholds with name:value,name:value"
+                "Multiple thresholds with name:value,name:value"
             ),
         )
         check_opts.add_argument(
@@ -1260,7 +1261,7 @@ class CheckPVE:
             "--min-version",
             dest="min_version",
             type=str,
-            help="The minimal pve version to check for. Any version lower than this will return "
+            help="The minimum PVE version to check for. Any version lower than this will return "
             "CRITICAL.",
         )
 
