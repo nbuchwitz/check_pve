@@ -2,6 +2,7 @@
 Icinga check command for Proxmox VE via API
 
 ![Linter](https://github.com/nbuchwitz/check_pve/actions/workflows/lint.yml/badge.svg)
+![Tests](https://github.com/nbuchwitz/check_pve/actions/workflows/test.yml/badge.svg)
 
 ## Setup
 
