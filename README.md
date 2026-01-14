@@ -40,15 +40,16 @@ After this, you can start the container like so:
 ```
 docker run -d --name check_pve --rm check_pve
 ```
-The container will keep running without having the need for any of the requirements listed above (for environments that do not support this).
+The container bundles the required dependencies and can run in environments where installing those packages is not possible.
+
 Running a check is as simple as:
 ```
 docker exec check_pve python check_pve.py ....rest of the default arguments listed below....
 ```
 
-### Create a API user in Proxmox VE
+### Create an API user on Proxmox VE
 
-Create a role named ``Monitoring`` and assign necessary privileges:
+Create a role named `Monitoring` and assign necessary privileges:
 
 ```
 pveum roleadd Monitoring
@@ -57,13 +58,13 @@ pveum rolemod Monitoring --privs Sys.Audit,Sys.Modify,Datastore.Audit,VM.Audit
 
 **Important:** The `VM.Monitor` privilege was removed in Proxmox VE 9.0; on older versions it may still be required.
 
-Create a user named ``monitoring`` and set password:
+Create a user named `monitoring` and set password:
 
 ```
 pveum useradd monitoring@pve --comment "The ICINGA 2 monitoring user"
 ```
 
-#### Use token based authorization (recommended)
+#### Use token-based authorization (recommended)
 
 Create an API token named `monitoring` for the user `monitoring` with backend `pve`:
 
@@ -71,7 +72,7 @@ Create an API token named `monitoring` for the user `monitoring` with backend `p
 pveum user token add monitoring@pve monitoring
 ```
 
-Please save the token secret as there isn't any way to fetch it at a later point.
+Please save the token secret — it cannot be retrieved later.
 
 Assign role `Monitoring` to token `monitoring` and the user `monitoring@pve`:
 
@@ -82,7 +83,7 @@ pveum acl modify / --roles Monitoring --tokens 'monitoring@pve!monitoring'
 
 You can now use the check command like this: `./check_pve.py -u monitoring@pve -t monitoring=abcdef12-3456-7890-abcd-deadbeef1234 ...`
 
-#### Use password based authorization
+#### Use password-based authorization
 
 Set password for the user `monitoring`:
 
@@ -90,18 +91,18 @@ Set password for the user `monitoring`:
 pveum passwd monitoring@pve
 ```
 
-Assign ``monitoring`` role to user ``monitoring``
+Assign the `Monitoring` role to the user `monitoring`:
 
 ```
 pveum acl modify / --users monitoring@pve --roles Monitoring
 ```
 
-For further information about the Proxmox VE privilege system have a look into the [documentation](https://pve.proxmox.com/pve-docs/pve-admin-guide.html#_strong_pveum_strong_proxmox_ve_user_manager).
+For more information about the Proxmox VE privilege system, see the [documentation](https://pve.proxmox.com/pve-docs/pve-admin-guide.html#_strong_pveum_strong_proxmox_ve_user_manager).
 
 
 ## Usage
 
-The ``icinga2`` folder contains the command definition and service examples for use with Icinga2.
+The `icinga2` folder contains the command definition and service examples for use with Icinga2.
 
 ```
 usage: check_pve.py [-h] [--version] [-e API_ENDPOINT] [--api-port API_PORT] [-u API_USER] [-p API_PASSWORD |
@@ -229,7 +230,7 @@ With memory thresholds:
 OK - VM 'test-vm' is running on 'node1'|cpu=1.85%;; memory=40.33%;50.0;80.0
 ```
 
-With a specified node name, the check plugin verifies on which node the VM runs.
+With a specified node name, the check plugin verifies on which node the VM runs:
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m vm -n node1 --name test-vm
 OK - VM 'test-vm' is running on node 'node1'|cpu=1.85%;; memory=8.33%;;
@@ -238,7 +239,7 @@ OK - VM 'test-vm' is running on node 'node1'|cpu=1.85%;; memory=8.33%;;
 WARNING - VM 'test-vm' is running on node 'node2' instead of 'node1'|cpu=1.85%;; memory=8.33%;;
 ```
 
-If you only want to gather metrics and don't care about the vm status add the ``--ignore-vm-status`` flag:
+If you only want to gather metrics and don't care about the VM status, add the `--ignore-vm-status` flag:
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m vm --name test-vm --ignore-vm-status
 OK - VM 'test-vm' is not running
@@ -251,7 +252,7 @@ OK - VM 'test-vm' is not running
 
 ```
 
-For hostalive checks without gathering performance data use ``vm_status`` instead of ``vm``. The parameters are the same as with ``vm``.
+For host-alive checks without gathering performance data, use `vm_status` instead of `vm`. The parameters are the same as with `vm`.
 
 **Check swap usage**
 ```
@@ -265,7 +266,7 @@ OK - Swap usage is 0.0 %|usage=0.0%;; used=0.0MB;;;8192.0
 OK - No failed replication jobs on node1
 ```
 
-**Check ceph cluster health**
+**Check Ceph cluster health**
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m ceph-health
 WARNING - Ceph Cluster is in warning state
@@ -316,12 +317,12 @@ Check for specific node and time frame:
 OK - 2 backup tasks successful, 0 backup tasks failed within the last 86400.0s
 ```
 
-Ignore a VM by their id from backup check:
+Ignore a VM by its ID in the backup check:
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m backup --ignore-vmid 123
 ```
 
-**Check snapshots age**
+**Check snapshot age**
 Check age of snapshots on all nodes (thresholds are specified in seconds):
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m snapshot-age -w 43200 -c 86400
@@ -338,7 +339,7 @@ Or both:
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m snapshot-age -n pve --name test-vm -w 43200 -c 86400
 ```
-You can also filter by VM/Container id:
+You can also filter by VM/Container ID:
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m snapshot-age -n pve --vmid 123 -w 43200 -c 86400
 ```
@@ -356,8 +357,8 @@ OK - VM 'test-vm' is running on 'node1'|cpu=1.85%;50.0; memory=40.33%;50.0;80.0
 
 ### Could not connect to PVE API: Failed to resolve hostname
 
-Verify that your DNS server is working and can resolve your hostname. If everything is fine check for proxyserver environment variables (HTTP_PROXY,HTTPS_PROXY), which maybe not allow communication to port 8006.
+Verify that your DNS server can resolve the Proxmox hostname. If DNS is working, check for proxy environment variables (HTTP_PROXY, HTTPS_PROXY), which may block connections to port 8006.
 
 ## Contributors
 
-Thank you to everyone, who is contributing to `check_pve`: https://github.com/nbuchwitz/check_pve/graphs/contributors.
+Thanks to everyone who contributes to `check_pve`: https://github.com/nbuchwitz/check_pve/graphs/contributors.
