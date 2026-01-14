@@ -875,6 +875,143 @@ class CheckPVE:
         self.add_perfdata("running_tasks", running_count)
         self.add_perfdata("failed_tasks", failed_count)
 
+    def check_certificate(self) -> None:
+        """Check SSL certificate expiration for cluster nodes."""
+        url = self.get_url("cluster/resources")
+        resources = self.request(url)
+
+        if not resources:
+            self.check_result = CheckState.UNKNOWN
+            self.check_message = "Could not fetch cluster resources from API"
+            return
+
+        # Filter to get only nodes
+        nodes = [r for r in resources if r.get("type") == "node"]
+
+        # Filter by specific node if specified
+        if self.options.node is not None:
+            nodes = [n for n in nodes if n.get("node") == self.options.node]
+
+        if not nodes:
+            self.check_result = CheckState.UNKNOWN
+            if self.options.node:
+                self.check_message = f"Node '{self.options.node}' not found"
+            else:
+                self.check_message = "No nodes found in cluster"
+            return
+
+        # Get certificate info for each node
+        expiring_soon = []
+        expired = []
+        cert_info = []
+
+        # Get thresholds (default: warning=30 days, critical=7 days)
+        warning_days = self.threshold_warning(None)
+        critical_days = self.threshold_critical(None)
+
+        if warning_days is None:
+            warning_days = CheckThreshold(30)
+        if critical_days is None:
+            critical_days = CheckThreshold(7)
+
+        for node in nodes:
+            node_name = node.get("node")
+            cert_url = self.get_url(f"nodes/{node_name}/certificates/info")
+
+            try:
+                cert_data = self.request(cert_url)
+
+                if not cert_data:
+                    continue
+
+                # Process certificates - check pveproxy-ssl.pem if present, otherwise pve-ssl.pem
+                # pveproxy-ssl.pem is used if custom certificate is configured
+                cert_to_check = None
+
+                for cert in cert_data:
+                    filename = cert.get("filename", "unknown")
+                    if filename == "pveproxy-ssl.pem":
+                        cert_to_check = cert
+                        break
+                    elif filename == "pve-ssl.pem":
+                        cert_to_check = cert
+
+                if not cert_to_check:
+                    continue
+
+                filename = cert_to_check.get("filename")
+                notafter = cert_to_check.get("notafter")
+                if not notafter:
+                    continue
+
+                # Calculate days until expiration
+                expiry_date = datetime.fromtimestamp(notafter, tz=timezone.utc)
+                now = datetime.now(timezone.utc)
+                days_left = (expiry_date - now).days
+
+                cert_info.append(
+                    {
+                        "node": node_name,
+                        "filename": filename,
+                        "days_left": days_left,
+                        "expiry_date": expiry_date,
+                    }
+                )
+
+                # Check against thresholds
+                if days_left < 0:
+                    expired.append(f"{node_name}/{filename}")
+                elif critical_days.check(days_left, lower=True):
+                    expiring_soon.append((node_name, filename, days_left, "CRITICAL"))
+                elif warning_days.check(days_left, lower=True):
+                    expiring_soon.append((node_name, filename, days_left, "WARNING"))
+
+            except Exception:
+                # If we can't get cert info for a node, skip it
+                continue
+
+        # Determine check result
+        if expired:
+            self.check_result = CheckState.CRITICAL
+            self.check_message = f"{len(expired)} certificate(s) expired: {', '.join(expired)}"
+        elif expiring_soon:
+            critical_certs = [c for c in expiring_soon if c[3] == "CRITICAL"]
+            warning_certs = [c for c in expiring_soon if c[3] == "WARNING"]
+
+            if critical_certs:
+                self.check_result = CheckState.CRITICAL
+                messages = []
+                for node_name, filename, days, _ in critical_certs:
+                    messages.append(f"{node_name}/{filename} expires in {days} days")
+                self.check_message = (
+                    f"{len(critical_certs)} certificate(s) expiring soon: {', '.join(messages)}"
+                )
+            else:
+                self.check_result = CheckState.WARNING
+                messages = []
+                for node_name, filename, days, _ in warning_certs:
+                    messages.append(f"{node_name}/{filename} expires in {days} days")
+                self.check_message = (
+                    f"{len(warning_certs)} certificate(s) expiring soon: {', '.join(messages)}"
+                )
+        else:
+            self.check_result = CheckState.OK
+            if self.options.node:
+                self.check_message = f"Certificate on node '{self.options.node}' is valid"
+            else:
+                self.check_message = f"All certificates on {len(nodes)} node(s) are valid"
+
+        # Add performance data for minimum days left (no unit, just number of days)
+        if cert_info:
+            min_days = min(c["days_left"] for c in cert_info)
+            self.add_perfdata(
+                "days_left",
+                min_days,
+                unit="",
+                warning=warning_days.value,
+                critical=critical_days.value,
+            )
+
     def check_storage(self, name: str) -> None:
         """Check if storage exists and return usage."""
         url = self.get_url(f"nodes/{self.options.node}/storage")
@@ -1258,6 +1395,8 @@ class CheckPVE:
             self.check_network_status(self.options.name)
         elif self.options.mode == "task-queue":
             self.check_task_queue()
+        elif self.options.mode == "certificate":
+            self.check_certificate()
         else:
             message = f"Check mode '{self.options.mode}' not known"
             self.output(CheckState.UNKNOWN, message)
@@ -1355,6 +1494,7 @@ class CheckPVE:
                 "snapshot-age",
                 "network-status",
                 "task-queue",
+                "certificate",
             ),
             help="Mode to use.",
         )
@@ -1511,6 +1651,7 @@ class CheckPVE:
             "backup",
             "snapshot-age",
             "task-queue",
+            "certificate",
         ]:
             p.print_usage()
             message = f"{p.prog}: error: --mode {options.mode} requires node name (--node)"
@@ -1537,11 +1678,11 @@ class CheckPVE:
             raise SystemExit(2)
 
         if options.threshold_warning and options.threshold_critical:
-            if options.mode != "subscription" and not compare_thresholds(
+            if options.mode not in ["subscription", "certificate"] and not compare_thresholds(
                 options.threshold_warning, options.threshold_critical, lambda w, c: w <= c
             ):
                 p.error("Critical value must be greater than warning value")
-            elif options.mode == "subscription" and not compare_thresholds(
+            elif options.mode in ["subscription", "certificate"] and not compare_thresholds(
                 options.threshold_warning, options.threshold_critical, lambda w, c: w >= c
             ):
                 p.error("Critical value must be lower than warning value")

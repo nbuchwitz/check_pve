@@ -108,7 +108,7 @@ The `icinga2` folder contains the command definition and service examples for us
 ```
 usage: check_pve.py [-h] [--version] [-e API_ENDPOINT] [--api-port API_PORT] [-u API_USER] [-p API_PASSWORD |
                     -P API_PASSWORD_FILE | -t API_TOKEN | -T API_TOKEN_FILE] [-k]
-                    [-m {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup,snapshot-age,network-status,task-queue}]
+                    [-m {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup,snapshot-age,network-status,task-queue,certificate}]
                     [-n NODE] [--name NAME] [--vmid VMID] [--expected-vm-status {running,stopped,paused}]
                     [--ignore-vmid VMID] [--ignore-vm-status] [--ignore-service NAME] [--ignore-disk NAME]
                     [--ignore-pools NAME] [--ignore-interface NAME] [-w THRESHOLD_WARNING] [-c THRESHOLD_CRITICAL] [-M] [-V MIN_VERSION]
@@ -138,7 +138,7 @@ API Options:
   -k, --insecure        Don't verify HTTPS certificate
 
 Check Options:
-  -m, --mode {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup,snapshot-age,network-status,task-queue}
+  -m, --mode {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup,snapshot-age,network-status,task-queue,certificate}
                         Mode to use.
   -n, --node NODE       Node to check (necessary for all modes except cluster, version and backup)
   --name NAME           Name of storage, vm, or container
@@ -391,6 +391,26 @@ With thresholds for running tasks:
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m task-queue -w running:5 -c running:10
 WARNING - Cluster: 6 tasks running (3 backup, 2 qmigrate, 1 qmrestore)|running_tasks=6;5.0;10.0 failed_tasks=0;;
+```
+
+**Check SSL certificates**
+
+Check all cluster node certificates (checks pveproxy-ssl.pem if present, otherwise pve-ssl.pem):
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m certificate
+OK - All certificates on 3 node(s) are valid|days_left=180;30.0;7.0
+```
+
+Check specific node certificate:
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m certificate -n node1
+OK - Certificate on node 'node1' is valid|days_left=180;30.0;7.0
+```
+
+With custom thresholds (default: warning=30 days, critical=7 days):
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m certificate -w 60 -c 14
+WARNING - 1 certificate(s) expiring soon: node1/pveproxy-ssl.pem expires in 45 days|days_left=45;60.0;14.0
 ```
 
 ## FAQ
