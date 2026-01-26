@@ -1101,32 +1101,33 @@ class CheckPVE:
         if delta is not None:
             self.check_message += f" within the last {delta.value}s"
 
-        nbu_url = self.get_url("cluster/backup-info/not-backed-up")
-        not_backed_up = self.request(nbu_url)
+        if not self.options.ignore_no_backup:
+            nbu_url = self.get_url("cluster/backup-info/not-backed-up")
+            not_backed_up = self.request(nbu_url)
 
-        if len(not_backed_up) > 0:
-            guest_ids = []
+            if len(not_backed_up) > 0:
+                guest_ids = []
 
-            for guest in not_backed_up:
-                guest_ids.append(guest["vmid"])
+                for guest in not_backed_up:
+                    guest_ids.append(guest["vmid"])
 
-            ignored_vmids = []
-            for pool in self.options.ignore_pools:
-                # ignore vms based on their membership of a certain pool
-                ignored_vmids += self._get_pool_members(pool)
+                ignored_vmids = []
+                for pool in self.options.ignore_pools:
+                    # ignore vms based on their membership of a certain pool
+                    ignored_vmids += self._get_pool_members(pool)
 
-            if self.options.ignore_vmids:
-                # ignore vms based on their id
-                ignored_vmids = ignored_vmids + self.options.ignore_vmids
+                if self.options.ignore_vmids:
+                    # ignore vms based on their id
+                    ignored_vmids = ignored_vmids + self.options.ignore_vmids
 
-            remaining_not_backed_up = sorted(list(set(guest_ids) - set(ignored_vmids)))
-            if len(remaining_not_backed_up) > 0:
-                if self.check_result not in [CheckState.CRITICAL, CheckState.UNKNOWN]:
-                    self.check_result = CheckState.WARNING
-                    self.check_message += (
-                        "\nThere are unignored guests not covered by any backup schedule: "
-                        + ", ".join(map(str, remaining_not_backed_up))
-                    )
+                remaining_not_backed_up = sorted(list(set(guest_ids) - set(ignored_vmids)))
+                if len(remaining_not_backed_up) > 0:
+                    if self.check_result not in [CheckState.CRITICAL, CheckState.UNKNOWN]:
+                        self.check_result = CheckState.WARNING
+                        self.check_message += (
+                            "\nThere are unignored guests not covered by any backup schedule: "
+                            + ", ".join(map(str, remaining_not_backed_up))
+                        )
 
     def check_snapshot_age(self, idx: Optional[Union[str, int]]) -> None:
         """Check age of snapshots."""
@@ -1561,6 +1562,14 @@ class CheckPVE:
             metavar="NAME",
             help="Ignore VMs and containers in pool(s) NAME in checks",
             default=[],
+        )
+
+        check_opts.add_argument(
+            "--ignore-no-backup",
+            dest="ignore_no_backup",
+            action="store_true",
+            help="Ignore not backed up VMs in backup check",
+            default=False,
         )
 
         check_opts.add_argument(
