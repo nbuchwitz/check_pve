@@ -111,7 +111,8 @@ usage: check_pve.py [-h] [--version] [-e API_ENDPOINT] [--api-port API_PORT] [-u
                     [-m {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup,snapshot-age,network-status,task-queue,certificate}]
                     [-n NODE] [--name NAME] [--vmid VMID] [--expected-vm-status {running,stopped,paused}]
                     [--ignore-vmid VMID] [--ignore-vm-status] [--ignore-service NAME] [--ignore-disk NAME]
-                    [--ignore-pools NAME] [--ignore-interface NAME] [-w THRESHOLD_WARNING] [-c THRESHOLD_CRITICAL] [-M] [-V MIN_VERSION]
+                    [--ignore-pools NAME] [--ignore-interface NAME] [--ignore-no-backup]
+                    [-w THRESHOLD_WARNING] [-c THRESHOLD_CRITICAL] [-M] [-V MIN_VERSION]
                     [--unit {GB,MB,KB,GiB,MiB,KiB,B}]
 
 Check command for PVE hosts via API
@@ -323,6 +324,11 @@ OK - 2 backup tasks successful, 0 backup tasks failed within the last 86400.0s
 Ignore a VM by its ID in the backup check:
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m backup --ignore-vmid 123
+```
+
+Ignore any VM with unconfigured backup in the backup check:
+```
+./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m backup --ignore-no-backup
 ```
 
 **Check snapshot age**
