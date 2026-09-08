@@ -361,25 +361,31 @@ class CheckPVE:
             self.check_result = CheckState.WARNING
 
     def check_disks(self) -> None:
-        """Check disk health on specific Proxmox VE node."""
+        """Check disk health on specific Proxmox VE node.
+
+        Disks can be excluded from the check by device name or serial number.
+        """
         url = self.get_url(f"nodes/{self.options.node}/disks")
+
+        ignore_disks = {entry.strip().lower() for entry in self.options.ignore_disks}
 
         failed = []
         unknown = []
         disks = self.request(url + "/list")
         for disk in disks:
             name = disk["devpath"].replace("/dev/", "")
+            serial = disk.get("serial", "") or ""
 
-            if name in self.options.ignore_disks:
+            if name.lower() in ignore_disks or (serial and serial.lower() in ignore_disks):
                 continue
 
             if disk["health"] == "UNKNOWN":
                 self.check_result = CheckState.WARNING
-                unknown.append({"serial": disk["serial"], "device": disk["devpath"]})
+                unknown.append({"serial": serial, "device": disk["devpath"]})
 
             elif disk["health"] not in ("PASSED", "OK"):
                 self.check_result = CheckState.WARNING
-                failed.append({"serial": disk["serial"], "device": disk["devpath"]})
+                failed.append({"serial": serial, "device": disk["devpath"]})
 
             if disk["wearout"] != "N/A":
                 self.add_perfdata(f"wearout_{name}", disk["wearout"])
@@ -1550,8 +1556,10 @@ class CheckPVE:
             "--ignore-disk",
             dest="ignore_disks",
             action="append",
-            metavar="NAME",
-            help="Ignore disk NAME in health check",
+            metavar="DISK",
+            help="Ignore disk DISK in health check. Accepts either the device "
+            "name (e.g. 'sdb') or the disk's serial number; matching is "
+            "case-insensitive. Can be given multiple times.",
             default=[],
         )
 

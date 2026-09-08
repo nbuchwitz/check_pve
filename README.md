@@ -110,7 +110,7 @@ usage: check_pve.py [-h] [--version] [-e API_ENDPOINT] [--api-port API_PORT] [-u
                     -P API_PASSWORD_FILE | -t API_TOKEN | -T API_TOKEN_FILE] [-k]
                     [-m {cluster,version,cpu,memory,swap,storage,io_wait,io-wait,updates,services,subscription,vm,vm_status,vm-status,replication,disk-health,ceph-health,zfs-health,zfs-fragmentation,backup,snapshot-age,network-status,task-queue,certificate}]
                     [-n NODE] [--name NAME] [--vmid VMID] [--expected-vm-status {running,stopped,paused}]
-                    [--ignore-vmid VMID] [--ignore-vm-status] [--ignore-service NAME] [--ignore-disk NAME]
+                    [--ignore-vmid VMID] [--ignore-vm-status] [--ignore-service NAME] [--ignore-disk DISK]
                     [--ignore-pools NAME] [--ignore-interface NAME] [--ignore-no-backup]
                     [-w THRESHOLD_WARNING] [-c THRESHOLD_CRITICAL] [-M] [-V MIN_VERSION]
                     [--unit {GB,MB,KB,GiB,MiB,KiB,B}]
@@ -150,7 +150,8 @@ Check Options:
   --ignore-vm-status    Ignore VM status in checks
   --ignore-service NAME
                         Ignore service NAME in checks
-  --ignore-disk NAME    Ignore disk NAME in health check
+  --ignore-disk DISK    Ignore disk DISK in health check. Accepts either the device name (e.g. 'sdb') or the
+                        disk's serial number; matching is case-insensitive. Can be given multiple times.
   --ignore-pools NAME   Ignore VMs and containers in pool(s) NAME in checks
   --ignore-interface NAME
                         Ignore network interface NAME in network status check
