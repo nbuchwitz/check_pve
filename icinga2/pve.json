@@ -1,0 +1,918 @@
+{
+    "Command": {
+        "pve": {
+            "arguments": {
+                "--expected-vm-status": {
+                    "description": "Expected status of the VM",
+                    "value": "$pve_expected_vm_status$"
+                },
+                "--ignore-disk": {
+                    "description": "Ignore disks in check. Can be either a sdX device name or a disk serial number.",
+                    "repeat_key": true,
+                    "value": "$pve_ignore_disks$"
+                },
+                "--ignore-interface": {
+                    "repeat_key": true,
+                    "value": "$pve_ignore_interfaces$"
+                },
+                "--ignore-no-backup": {
+                    "description": "Ignore not backed up VM",
+                    "set_if": "$pve_ignore_no_backup$",
+                    "set_if_format": "string"
+                },
+                "--ignore-pools": {
+                    "description": "Ignore VMs/CTs in these Pools",
+                    "repeat_key": true,
+                    "value": "$pve_ignore_pools$"
+                },
+                "--ignore-service": {
+                    "description": "Ignore services in check",
+                    "repeat_key": true,
+                    "value": "$pve_ignore_services$"
+                },
+                "--ignore-vm-status": {
+                    "description": "Ignore VM status in check",
+                    "set_if": "$pve_ignore_vm_status$",
+                    "set_if_format": "string"
+                },
+                "--ignore-vmid": {
+                    "repeat_key": true,
+                    "value": "$pve_ignore_vmids$"
+                },
+                "--name": {
+                    "description": "Name of storage or vm to check",
+                    "value": "$pve_resource_name$"
+                },
+                "-M": {
+                    "description": "Unit of tresholds and values is MB",
+                    "set_if": "$pve_tresholds_mb$",
+                    "set_if_format": "string"
+                },
+                "-T": "$pve_token_file$",
+                "-V": {
+                    "description": "Minimal pve version. Everything lower than this will return CRITICAL.",
+                    "value": "$pve_min_version$"
+                },
+                "-c": {
+                    "description": "Critical treshold",
+                    "value": "$pve_critical$"
+                },
+                "-e": {
+                    "description": "Hostname for PVE API",
+                    "required": true,
+                    "value": "$pve_host$"
+                },
+                "-k": {
+                    "description": "Connect to this host instead of $pve_host$",
+                    "set_if": "$pve_insecure_connection$",
+                    "set_if_format": "string"
+                },
+                "-m": {
+                    "description": "Check mode (cluster, version, updates, subscription, storage, cpu, memory, io_wait, vm, replication)",
+                    "required": true,
+                    "value": "$pve_mode$"
+                },
+                "-n": {
+                    "description": "Node to check (necessary for all modes except cluster and version)",
+                    "value": "$pve_node$"
+                },
+                "-p": {
+                    "description": "API user password",
+                    "value": "$pve_password$"
+                },
+                "-t": {
+                    "description": "API user token",
+                    "value": "$pve_token$"
+                },
+                "-u": {
+                    "description": "API user (ex. monitoring@pve)",
+                    "required": true,
+                    "value": "$pve_user$"
+                },
+                "-w": {
+                    "description": "Warning treshold",
+                    "value": "$pve_warning$"
+                }
+            },
+            "command": "check_pve.py",
+            "customVariables": [],
+            "fields": [
+                {
+                    "datafield_id": 1,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 2,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 3,
+                    "is_required": "y",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 4,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 17,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 18,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 19,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 5,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 9,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 20,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 15,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 6,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 7,
+                    "is_required": "y",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 10,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 11,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 13,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 12,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 21,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 16,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 8,
+                    "is_required": "y",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 14,
+                    "is_required": "n",
+                    "var_filter": null
+                }
+            ],
+            "methods_execute": "PluginCheck",
+            "object_name": "pve",
+            "object_type": "object",
+            "uuid": "7f5a43c9-2665-4f8a-a6fa-96e9d1c5ec66"
+        }
+    },
+    "ServiceTemplate": {
+        "tpl-service-pve-backup": {
+            "check_command": "pve",
+            "check_interval": 86400,
+            "customVariables": [],
+            "fields": [],
+            "imports": [
+                "Base Service"
+            ],
+            "object_name": "tpl-service-pve-backup",
+            "object_type": "template",
+            "use_agent": false,
+            "uuid": "70fb6e96-f954-448f-a522-af1e8327a9ee",
+            "vars": {
+                "pve_mode": "backup"
+            }
+        },
+        "tpl-service-pve-ceph-health": {
+            "check_command": "pve",
+            "customVariables": [],
+            "fields": [],
+            "imports": [
+                "Base Service"
+            ],
+            "object_name": "tpl-service-pve-ceph-health",
+            "object_type": "template",
+            "use_agent": false,
+            "uuid": "fb1a170f-a486-4592-944a-da22754f8640",
+            "vars": {
+                "pve_mode": "ceph-health"
+            }
+        },
+        "tpl-service-pve-cluster": {
+            "check_command": "pve",
+            "customVariables": [],
+            "fields": [],
+            "imports": [
+                "Base Service"
+            ],
+            "object_name": "tpl-service-pve-cluster",
+            "object_type": "template",
+            "use_agent": false,
+            "uuid": "61da6899-c5da-4876-ac13-ca1c475b9755",
+            "vars": {
+                "pve_mode": "cluster"
+            }
+        },
+        "tpl-service-pve-disk-health": {
+            "check_command": "pve",
+            "customVariables": [],
+            "fields": [],
+            "imports": [
+                "Base Service"
+            ],
+            "object_name": "tpl-service-pve-disk-health",
+            "object_type": "template",
+            "use_agent": false,
+            "uuid": "dd53fd4d-25fa-4e51-b9c6-466b2092735f",
+            "vars": {
+                "pve_mode": "disk-health"
+            }
+        },
+        "tpl-service-pve-network-status": {
+            "check_command": "pve",
+            "customVariables": [],
+            "fields": [],
+            "imports": [
+                "Base Service"
+            ],
+            "object_name": "tpl-service-pve-network-status",
+            "object_type": "template",
+            "use_agent": false,
+            "uuid": "d7cdbe53-dde5-47d1-8c97-28c7af4c4a5e",
+            "vars": {
+                "pve_mode": "network-status"
+            }
+        },
+        "tpl-service-pve-services": {
+            "check_command": "pve",
+            "check_interval": 300,
+            "customVariables": [],
+            "fields": [],
+            "imports": [
+                "Base Service"
+            ],
+            "object_name": "tpl-service-pve-services",
+            "object_type": "template",
+            "use_agent": false,
+            "uuid": "df8cbb4a-6967-40e8-8e90-76589f908c33",
+            "vars": {
+                "pve_mode": "services"
+            }
+        },
+        "tpl-service-pve-subscription": {
+            "check_command": "pve",
+            "check_interval": 86400,
+            "customVariables": [],
+            "fields": [],
+            "imports": [
+                "Base Service"
+            ],
+            "object_name": "tpl-service-pve-subscription",
+            "object_type": "template",
+            "use_agent": false,
+            "uuid": "0c933254-69e4-4e57-baf9-0203e2e299f0",
+            "vars": {
+                "pve_critical": "14",
+                "pve_mode": "subscription",
+                "pve_warning": "30"
+            }
+        },
+        "tpl-service-pve-version": {
+            "check_command": "pve",
+            "check_interval": 86400,
+            "customVariables": [],
+            "fields": [],
+            "imports": [
+                "Base Service"
+            ],
+            "object_name": "tpl-service-pve-version",
+            "object_type": "template",
+            "use_agent": false,
+            "uuid": "8d4e7f77-1b3d-4a52-8419-3b6de5e2f1f6",
+            "vars": {
+                "pve_mode": "version"
+            }
+        },
+        "tpl-service-pve-zfs-health": {
+            "check_command": "pve",
+            "check_interval": 300,
+            "customVariables": [],
+            "fields": [],
+            "imports": [
+                "Base Service"
+            ],
+            "object_name": "tpl-service-pve-zfs-health",
+            "object_type": "template",
+            "use_agent": false,
+            "uuid": "a9072987-fa7a-4f2d-8912-493d4fc0145a",
+            "vars": {
+                "pve_mode": "zfs-health"
+            }
+        },
+        "tpl-service-pve-memory": {
+            "check_command": "pve",
+            "customVariables": [],
+            "fields": [],
+            "imports": [
+                "Base Service"
+            ],
+            "object_name": "tpl-service-pve-memory",
+            "object_type": "template",
+            "use_agent": false,
+            "uuid": "08e5c9a7-ea29-46ba-9b06-73401ce7adc9",
+            "vars": {
+                "pve_critical": "90",
+                "pve_mode": "memory",
+                "pve_warning": "80"
+            }
+        },
+        "tpl-service-pve-cpu": {
+            "check_command": "pve",
+            "customVariables": [],
+            "fields": [],
+            "imports": [
+                "Base Service"
+            ],
+            "object_name": "tpl-service-pve-cpu",
+            "object_type": "template",
+            "use_agent": false,
+            "uuid": "76883417-3e85-438b-93ff-c71b605ac418",
+            "vars": {
+                "pve_critical": "90",
+                "pve_mode": "cpu",
+                "pve_warning": "70"
+            }
+        },
+        "tpl-service-pve-io-wait": {
+            "check_command": "pve",
+            "customVariables": [],
+            "fields": [],
+            "imports": [
+                "Base Service"
+            ],
+            "object_name": "tpl-service-pve-io-wait",
+            "object_type": "template",
+            "use_agent": false,
+            "uuid": "b368f082-329b-43b3-a6ce-a73287d50874",
+            "vars": {
+                "pve_critical": "30",
+                "pve_mode": "io_wait",
+                "pve_warning": "10"
+            }
+        },
+        "tpl-service-pve-updates": {
+            "check_command": "pve",
+            "check_interval": 14400,
+            "customVariables": [],
+            "fields": [],
+            "imports": [
+                "Base Service"
+            ],
+            "object_name": "tpl-service-pve-updates",
+            "object_type": "template",
+            "use_agent": false,
+            "uuid": "507e2e68-14a0-4b70-9ee7-10e7e375b266",
+            "vars": {
+                "pve_critical": "250",
+                "pve_mode": "updates",
+                "pve_warning": "100"
+            }
+        },
+        "tpl-service-pve-storage": {
+            "check_command": "pve",
+            "customVariables": [],
+            "fields": [],
+            "imports": [
+                "Base Service"
+            ],
+            "object_name": "tpl-service-pve-storage",
+            "object_type": "template",
+            "use_agent": false,
+            "uuid": "bc09fffb-20a5-4b5c-9f37-3b457b7806d7",
+            "vars": {
+                "pve_critical": "95",
+                "pve_mode": "storage",
+                "pve_warning": "90"
+            }
+        },
+        "tpl-service-pve-replication": {
+            "check_command": "pve",
+            "customVariables": [],
+            "fields": [],
+            "imports": [
+                "Base Service"
+            ],
+            "object_name": "tpl-service-pve-replication",
+            "object_type": "template",
+            "use_agent": false,
+            "uuid": "277ed8df-57ec-4c50-aec4-8e71fca73970",
+            "vars": {
+                "pve_mode": "replication"
+            }
+        },
+        "tpl-service-pve-swap": {
+            "check_command": "pve",
+            "customVariables": [],
+            "fields": [],
+            "imports": [
+                "Base Service"
+            ],
+            "object_name": "tpl-service-pve-swap",
+            "object_type": "template",
+            "use_agent": false,
+            "uuid": "af29a7b7-aba4-4ad2-98fa-fedd097ca8c9",
+            "vars": {
+                "pve_critical": "50",
+                "pve_mode": "swap",
+                "pve_warning": "30"
+            }
+        }
+    },
+    "ServiceSet": {
+        "Proxmox": {
+            "object_name": "Proxmox",
+            "object_type": "template",
+            "services": [
+                {
+                    "customVariables": [],
+                    "fields": [],
+                    "imports": [
+                        "tpl-service-pve-backup"
+                    ],
+                    "object_name": "pve-backup",
+                    "object_type": "object",
+                    "uuid": "83228b68-6c39-434d-ae0e-ac386949b561",
+                    "vars": {
+                        "pve_host": "$host.address$",
+                        "pve_node": "$host.vars.proxmox_node_name$",
+                        "pve_token": "$host.vars.proxmox_api_token$",
+                        "pve_user": "$host.vars.proxmox_api_user$"
+                    }
+                },
+                {
+                    "customVariables": [],
+                    "fields": [],
+                    "imports": [
+                        "tpl-service-pve-cpu"
+                    ],
+                    "object_name": "pve-cpu",
+                    "object_type": "object",
+                    "uuid": "3005292d-573b-44b9-8eb5-114c2ecb0278",
+                    "vars": {
+                        "pve_host": "$host.address$",
+                        "pve_node": "$host.vars.proxmox_node_name$",
+                        "pve_token": "$host.vars.proxmox_api_token$",
+                        "pve_user": "$host.vars.proxmox_api_user$"
+                    }
+                },
+                {
+                    "customVariables": [],
+                    "fields": [],
+                    "imports": [
+                        "tpl-service-pve-disk-health"
+                    ],
+                    "object_name": "pve-disk-health",
+                    "object_type": "object",
+                    "uuid": "133dd923-f0ee-4c82-b1c3-e7c1d267bc6e",
+                    "vars": {
+                        "pve_host": "$host.address$",
+                        "pve_node": "$host.vars.proxmox_node_name$",
+                        "pve_token": "$host.vars.proxmox_api_token$",
+                        "pve_user": "$host.vars.proxmox_api_user$"
+                    }
+                },
+                {
+                    "customVariables": [],
+                    "fields": [],
+                    "imports": [
+                        "tpl-service-pve-io-wait"
+                    ],
+                    "object_name": "pve-io-wait",
+                    "object_type": "object",
+                    "uuid": "a7ddaa0b-6ae1-4550-a4ba-db191462808d",
+                    "vars": {
+                        "pve_host": "$host.address$",
+                        "pve_node": "$host.vars.proxmox_node_name$",
+                        "pve_token": "$host.vars.proxmox_api_token$",
+                        "pve_user": "$host.vars.proxmox_api_user$"
+                    }
+                },
+                {
+                    "customVariables": [],
+                    "fields": [],
+                    "imports": [
+                        "tpl-service-pve-network-status"
+                    ],
+                    "object_name": "pve-network-status",
+                    "object_type": "object",
+                    "uuid": "44bcbe2c-4a2e-480c-8b36-8f5dbd6d0f07",
+                    "vars": {
+                        "pve_host": "$host.address$",
+                        "pve_node": "$host.vars.proxmox_node_name$",
+                        "pve_token": "$host.vars.proxmox_api_token$",
+                        "pve_user": "$host.vars.proxmox_api_user$"
+                    }
+                },
+                {
+                    "customVariables": [],
+                    "fields": [],
+                    "imports": [
+                        "tpl-service-pve-replication"
+                    ],
+                    "object_name": "pve-replication",
+                    "object_type": "object",
+                    "uuid": "8f382215-8fb5-416f-8e3d-216e92a59fff",
+                    "vars": {
+                        "pve_host": "$host.address$",
+                        "pve_node": "$host.vars.proxmox_node_name$",
+                        "pve_token": "$host.vars.proxmox_api_token$",
+                        "pve_user": "$host.vars.proxmox_api_user$"
+                    }
+                },
+                {
+                    "customVariables": [],
+                    "fields": [],
+                    "imports": [
+                        "tpl-service-pve-services"
+                    ],
+                    "object_name": "pve-services",
+                    "object_type": "object",
+                    "uuid": "53c2e6cc-67ae-4f39-9bbc-8a54178d17f7",
+                    "vars": {
+                        "pve_host": "$host.address$",
+                        "pve_node": "$host.vars.proxmox_node_name$",
+                        "pve_token": "$host.vars.proxmox_api_token$",
+                        "pve_user": "$host.vars.proxmox_api_user$"
+                    }
+                },
+                {
+                    "customVariables": [],
+                    "fields": [],
+                    "imports": [
+                        "tpl-service-pve-subscription"
+                    ],
+                    "object_name": "pve-subscription",
+                    "object_type": "object",
+                    "uuid": "29c1d1c6-880f-49ce-b22d-f5c956f43e25",
+                    "vars": {
+                        "pve_host": "$host.address$",
+                        "pve_node": "$host.vars.proxmox_node_name$",
+                        "pve_token": "$host.vars.proxmox_api_token$",
+                        "pve_user": "$host.vars.proxmox_api_user$"
+                    }
+                },
+                {
+                    "customVariables": [],
+                    "fields": [],
+                    "imports": [
+                        "tpl-service-pve-swap"
+                    ],
+                    "object_name": "pve-swap",
+                    "object_type": "object",
+                    "uuid": "6f9a1eb7-e398-4e37-8365-59be04e86b25",
+                    "vars": {
+                        "pve_host": "$host.address$",
+                        "pve_node": "$host.vars.proxmox_node_name$",
+                        "pve_token": "$host.vars.proxmox_api_token$",
+                        "pve_user": "$host.vars.proxmox_api_user$"
+                    }
+                },
+                {
+                    "customVariables": [],
+                    "fields": [],
+                    "imports": [
+                        "tpl-service-pve-version"
+                    ],
+                    "object_name": "pve-version",
+                    "object_type": "object",
+                    "uuid": "d45c9b11-aa0c-4409-a82a-c20a9c422b4f",
+                    "vars": {
+                        "pve_host": "$host.address$",
+                        "pve_node": "$host.vars.proxmox_node_name$",
+                        "pve_token": "$host.vars.proxmox_api_token$",
+                        "pve_user": "$host.vars.proxmox_api_user$"
+                    }
+                },
+                {
+                    "customVariables": [],
+                    "fields": [],
+                    "imports": [
+                        "tpl-service-pve-zfs-health"
+                    ],
+                    "object_name": "pve-zfs-health",
+                    "object_type": "object",
+                    "uuid": "b74ec91f-f96e-42a7-a6c0-160ce6f220ac",
+                    "vars": {
+                        "pve_host": "$host.address$",
+                        "pve_node": "$host.vars.proxmox_node_name$",
+                        "pve_token": "$host.vars.proxmox_api_token$",
+                        "pve_user": "$host.vars.proxmox_api_user$"
+                    }
+                }
+            ],
+            "uuid": "e8366150-1609-47e0-bd97-955df24c8698"
+        },
+        "Proxmox-Clusterwide": {
+            "object_name": "Proxmox-Clusterwide",
+            "object_type": "template",
+            "services": [
+                {
+                    "customVariables": [],
+                    "fields": [],
+                    "imports": [
+                        "tpl-service-pve-ceph-health"
+                    ],
+                    "object_name": "pve-ceph-health",
+                    "object_type": "object",
+                    "uuid": "1549f222-91ef-4213-9b32-1e8d7a535a0c",
+                    "vars": {
+                        "pve_host": "$host.address$",
+                        "pve_node": "$host.vars.proxmox_node_name$",
+                        "pve_token": "$host.vars.proxmox_api_token$",
+                        "pve_user": "$host.vars.proxmox_api_user$"
+                    }
+                },
+                {
+                    "customVariables": [],
+                    "fields": [],
+                    "imports": [
+                        "tpl-service-pve-cluster"
+                    ],
+                    "object_name": "pve-cluster",
+                    "object_type": "object",
+                    "uuid": "d79a295d-ac95-4c82-890b-09e4fdf1bd6b",
+                    "vars": {
+                        "pve_host": "$host.address$",
+                        "pve_node": "$host.vars.proxmox_node_name$",
+                        "pve_token": "$host.vars.proxmox_api_token$",
+                        "pve_user": "$host.vars.proxmox_api_user$"
+                    }
+                }
+            ],
+            "uuid": "10614941-d416-4177-bfd0-b0dcd5ee745b"
+        }
+    },
+    "Datafield": {
+        "1": {
+            "uuid": "7e34e0a3-ce25-46eb-b57d-be8dfeb1c72c",
+            "varname": "pve_critical",
+            "caption": "PVE: Critical Threshold",
+            "description": "Critical treshold",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "2": {
+            "uuid": "1f63ca8f-f18e-45ff-9083-7a0c3cc10d35",
+            "varname": "pve_expected_vm_status",
+            "caption": "PVE: Expected VM Status",
+            "description": "Expected status of the VM",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "3": {
+            "uuid": "4887938e-b954-41a3-bcfb-32b3b7339bd9",
+            "varname": "pve_host",
+            "caption": "PVE: PVE Host",
+            "description": "Hostname for PVE API",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "4": {
+            "uuid": "9e8ece1f-f620-4529-9397-7e6012c8c574",
+            "varname": "pve_ignore_disks",
+            "caption": "PVE: Ignore disks",
+            "description": "Ignore disks in check. Can be either a sdX device name or a disk serial number.",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeArray",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "5": {
+            "uuid": "b2633d3a-0d65-4a6d-9e66-c90457e3d3f8",
+            "varname": "pve_ignore_services",
+            "caption": "PVE: Ignore Services",
+            "description": "Ignore services in check",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeArray",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "6": {
+            "uuid": "28c803a2-9dda-4168-b04e-046b7281a409",
+            "varname": "pve_min_version",
+            "caption": "PVE: Minimum Version",
+            "description": "Minimal pve version. Everything lower than this will return CRITICAL.",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "7": {
+            "uuid": "389ee8ad-267d-49bf-b95d-e3691e24a406",
+            "varname": "pve_mode",
+            "caption": "PVE: Check Mode",
+            "description": "Check mode (cluster, version, updates, subscription, storage, cpu, memory, io_wait, vm, replication)",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "8": {
+            "uuid": "54477d01-de70-4c00-958a-87ecc41f9a1c",
+            "varname": "pve_user",
+            "caption": "PVE: User",
+            "description": "API user (ex. monitoring@pve)",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "9": {
+            "uuid": "3b6dfe71-d562-49a9-a1b1-f29fefa595bf",
+            "varname": "pve_ignore_vm_status",
+            "caption": "PVE: Ignore VM status",
+            "description": "Ignore VM status in check",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeBoolean",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "10": {
+            "uuid": "5def95cd-2939-4387-bb70-9271616d1fe7",
+            "varname": "pve_node",
+            "caption": "PVE: Node",
+            "description": "Node to check (necessary for all modes except cluster and version)",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "11": {
+            "uuid": "e9923871-f05d-4cf6-b2b3-66bc2c85e577",
+            "varname": "pve_password",
+            "caption": "PVE: Password",
+            "description": "API user password",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {
+                "visibility": "hidden"
+            },
+            "category": null
+        },
+        "12": {
+            "uuid": "2118bce6-a8ed-4ba5-8ea8-25d4767b808a",
+            "varname": "pve_token",
+            "caption": "PVE: Token",
+            "description": "API user token in the format <TOKEN_NAME>=<TOKEN_SECRET>",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {
+                "visibility": "hidden"
+            },
+            "category": null
+        },
+        "13": {
+            "uuid": "5947191e-a162-4830-9f7b-ca7569ded999",
+            "varname": "pve_resource_name",
+            "caption": "PVE: Ressource Name",
+            "description": "Name of storage or vm to check",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "14": {
+            "uuid": "0953b097-74d9-4eda-9f1b-e7a408d36205",
+            "varname": "pve_warning",
+            "caption": "PVE: Warning Threshold",
+            "description": "Warning treshold",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "15": {
+            "uuid": "38463110-2aa6-4f7a-94e0-bb33a59537a8",
+            "varname": "pve_insecure_connection",
+            "caption": "PVE: Insecure?",
+            "description": "Don't validate HTTPS certificates",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeBoolean",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "16": {
+            "uuid": "e1abb34e-bc1e-4c05-b960-9e8fa2c36222",
+            "varname": "pve_tresholds_mb",
+            "caption": "PVE: Thresholds in MB?",
+            "description": "Unit of tresholds and values is MB",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeBoolean",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "17": {
+            "uuid": "15e87487-668e-412a-9192-a22ea96ce3d4",
+            "varname": "pve_ignore_interfaces",
+            "caption": "PVE: Ignore Interfaces",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeArray",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "18": {
+            "uuid": "af4493a0-0aaa-405f-956e-087b620892b3",
+            "varname": "pve_ignore_no_backup",
+            "caption": "PVE: Ignore No Backup?",
+            "description": "Ignore not backed up VM",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeBoolean",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "19": {
+            "uuid": "a7eb0c12-43ba-404a-b3e6-823077715fef",
+            "varname": "pve_ignore_pools",
+            "caption": "PVE: Ignore Pools",
+            "description": "Ignore VMs/CTs in these Pools",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeArray",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "20": {
+            "uuid": "dac281c1-50e8-4806-872b-4deaa92a7b79",
+            "varname": "pve_ignore_vmids",
+            "caption": "PVE: Ignore VMs",
+            "description": "Ignore VMs by VMID",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeArray",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "21": {
+            "uuid": "ac08e53a-f8a5-4a3b-8a48-52f3c4227ae2",
+            "varname": "pve_token_file",
+            "caption": "PVE: Token File",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {
+                "visibility": "visible"
+            },
+            "category": null
+        }
+    }
+}
