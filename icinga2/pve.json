@@ -1,0 +1,413 @@
+{
+    "Command": {
+        "pve": {
+            "arguments": {
+                "--expected-vm-status": {
+                    "description": "Expected status of the VM",
+                    "value": "$pve_expected_vm_status$"
+                },
+                "--ignore-disk": {
+                    "description": "Ignore disks in check. Can be either a sdX device name or a disk serial number.",
+                    "repeat_key": true,
+                    "value": "$pve_ignore_disks$"
+                },
+                "--ignore-interface": {
+                    "repeat_key": true,
+                    "value": "$pve_ignore_interfaces$"
+                },
+                "--ignore-no-backup": {
+                    "description": "Ignore not backed up VM",
+                    "set_if": "$pve_ignore_no_backup$",
+                    "set_if_format": "string"
+                },
+                "--ignore-pools": {
+                    "description": "Ignore VMs/CTs in these Pools",
+                    "repeat_key": true,
+                    "value": "$pve_ignore_pools$"
+                },
+                "--ignore-service": {
+                    "description": "Ignore services in check",
+                    "repeat_key": true,
+                    "value": "$pve_ignore_services$"
+                },
+                "--ignore-vm-status": {
+                    "description": "Ignore VM status in check",
+                    "set_if": "$pve_ignore_vm_status$",
+                    "set_if_format": "string"
+                },
+                "--ignore-vmid": {
+                    "repeat_key": true,
+                    "value": "$pve_ignore_vmids$"
+                },
+                "--name": {
+                    "description": "Name of storage or vm to check",
+                    "value": "$pve_resource_name$"
+                },
+                "-M": {
+                    "description": "Unit of tresholds and values is MB",
+                    "set_if": "$pve_tresholds_mb$",
+                    "set_if_format": "string"
+                },
+                "-V": {
+                    "description": "Minimal pve version. Everything lower than this will return CRITICAL.",
+                    "value": "$pve_min_version$"
+                },
+                "-c": {
+                    "description": "Critical treshold",
+                    "value": "$pve_critical$"
+                },
+                "-e": {
+                    "description": "Hostname for PVE API",
+                    "required": true,
+                    "value": "$pve_host$"
+                },
+                "-k": {
+                    "description": "Connect to this host instead of $pve_host$",
+                    "set_if": "$pve_insecure_connection$",
+                    "set_if_format": "string"
+                },
+                "-m": {
+                    "description": "Check mode (cluster, version, updates, subscription, storage, cpu, memory, io_wait, vm, replication)",
+                    "required": true,
+                    "value": "$pve_mode$"
+                },
+                "-n": {
+                    "description": "Node to check (necessary for all modes except cluster and version)",
+                    "value": "$pve_node$"
+                },
+                "-p": {
+                    "description": "API user password",
+                    "value": "$pve_password$"
+                },
+                "-t": {
+                    "description": "API user token",
+                    "value": "$pve_token$"
+                },
+                "-u": {
+                    "description": "API user (ex. monitoring@pve)",
+                    "required": true,
+                    "value": "$pve_user$"
+                },
+                "-w": {
+                    "description": "Warning treshold",
+                    "value": "$pve_warning$"
+                }
+            },
+            "command": "check_pve.py",
+            "fields": [
+                {
+                    "datafield_id": 1,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 2,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 3,
+                    "is_required": "y",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 4,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 5,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 6,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 7,
+                    "is_required": "y",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 8,
+                    "is_required": "y",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 9,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 10,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 11,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 12,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 13,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 14,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 15,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 16,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 17,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 18,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 19,
+                    "is_required": "n",
+                    "var_filter": null
+                },
+                {
+                    "datafield_id": 20,
+                    "is_required": "n",
+                    "var_filter": null
+                }
+            ],
+            "methods_execute": "PluginCheck",
+            "object_name": "pve",
+            "object_type": "object",
+            "uuid": "7f5a43c9-2665-4f8a-a6fa-96e9d1c5ec66"
+        }
+    },
+    "Datafield": {
+        "1": {
+            "uuid": "7e34e0a3-ce25-46eb-b57d-be8dfeb1c72c",
+            "varname": "pve_critical",
+            "caption": "PVE: Critical Threshold",
+            "description": "Critical treshold",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {
+                "visibility": "visible"
+            },
+            "category": null
+        },
+        "2": {
+            "uuid": "1f63ca8f-f18e-45ff-9083-7a0c3cc10d35",
+            "varname": "pve_expected_vm_status",
+            "caption": "PVE: Expected VM Status",
+            "description": "Expected status of the VM",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "3": {
+            "uuid": "4887938e-b954-41a3-bcfb-32b3b7339bd9",
+            "varname": "pve_host",
+            "caption": "PVE: PVE Host",
+            "description": "Hostname for PVE API",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "4": {
+            "uuid": "9e8ece1f-f620-4529-9397-7e6012c8c574",
+            "varname": "pve_ignore_disks",
+            "caption": "PVE: Ignore disks",
+            "description": "Ignore disks in check. Can be either a sdX device name or a disk serial number.",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeArray",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "5": {
+            "uuid": "b2633d3a-0d65-4a6d-9e66-c90457e3d3f8",
+            "varname": "pve_ignore_services",
+            "caption": "PVE: Ignore Services",
+            "description": "Ignore services in check",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeArray",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "6": {
+            "uuid": "28c803a2-9dda-4168-b04e-046b7281a409",
+            "varname": "pve_min_version",
+            "caption": "PVE: Minimum Version",
+            "description": "Minimal pve version. Everything lower than this will return CRITICAL.",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "7": {
+            "uuid": "389ee8ad-267d-49bf-b95d-e3691e24a406",
+            "varname": "pve_mode",
+            "caption": "PVE: Check Mode",
+            "description": "Check mode (cluster, version, updates, subscription, storage, cpu, memory, io_wait, vm, replication)",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "8": {
+            "uuid": "54477d01-de70-4c00-958a-87ecc41f9a1c",
+            "varname": "pve_user",
+            "caption": "PVE: User",
+            "description": "API user (ex. monitoring@pve)",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "9": {
+            "uuid": "3b6dfe71-d562-49a9-a1b1-f29fefa595bf",
+            "varname": "pve_ignore_vm_status",
+            "caption": "PVE: Ignore VM status",
+            "description": "Ignore VM status in check",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeBoolean",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "10": {
+            "uuid": "5def95cd-2939-4387-bb70-9271616d1fe7",
+            "varname": "pve_node",
+            "caption": "PVE: Node",
+            "description": "Node to check (necessary for all modes except cluster and version)",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "11": {
+            "uuid": "e9923871-f05d-4cf6-b2b3-66bc2c85e577",
+            "varname": "pve_password",
+            "caption": "PVE: Password",
+            "description": "API user password",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {
+                "visibility": "hidden"
+            },
+            "category": null
+        },
+        "12": {
+            "uuid": "2118bce6-a8ed-4ba5-8ea8-25d4767b808a",
+            "varname": "pve_token",
+            "caption": "PVE: Token",
+            "description": "API user token",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {
+                "visibility": "hidden"
+            },
+            "category": null
+        },
+        "13": {
+            "uuid": "5947191e-a162-4830-9f7b-ca7569ded999",
+            "varname": "pve_resource_name",
+            "caption": "PVE: Ressource Name",
+            "description": "Name of storage or vm to check",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "14": {
+            "uuid": "0953b097-74d9-4eda-9f1b-e7a408d36205",
+            "varname": "pve_warning",
+            "caption": "PVE: Warning Threshold",
+            "description": "Warning treshold",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeString",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "15": {
+            "uuid": "38463110-2aa6-4f7a-94e0-bb33a59537a8",
+            "varname": "pve_insecure_connection",
+            "caption": "PVE: Insecure?",
+            "description": "Connect to this host instead of $pve_host$",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeBoolean",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "16": {
+            "uuid": "e1abb34e-bc1e-4c05-b960-9e8fa2c36222",
+            "varname": "pve_tresholds_mb",
+            "caption": "PVE: Thresholds in MB?",
+            "description": "Unit of tresholds and values is MB",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeBoolean",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "17": {
+            "uuid": "15e87487-668e-412a-9192-a22ea96ce3d4",
+            "varname": "pve_ignore_interfaces",
+            "caption": "PVE: Ignore Interfaces",
+            "description": null,
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeArray",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "18": {
+            "uuid": "af4493a0-0aaa-405f-956e-087b620892b3",
+            "varname": "pve_ignore_no_backup",
+            "caption": "PVE: Ignore No Backup?",
+            "description": "Ignore not backed up VM",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeBoolean",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "19": {
+            "uuid": "a7eb0c12-43ba-404a-b3e6-823077715fef",
+            "varname": "pve_ignore_pools",
+            "caption": "PVE: Ignore Pools",
+            "description": "Ignore VMs/CTs in these Pools",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeArray",
+            "format": null,
+            "settings": {},
+            "category": null
+        },
+        "20": {
+            "uuid": "dac281c1-50e8-4806-872b-4deaa92a7b79",
+            "varname": "pve_ignore_vmids",
+            "caption": "PVE: Ignore VMs",
+            "description": "Ignore VMs by VMID",
+            "datatype": "Icinga\\Module\\Director\\DataType\\DataTypeArray",
+            "format": null,
+            "settings": {},
+            "category": null
+        }
+    }
+}
