@@ -113,7 +113,23 @@ For more information about the Proxmox VE privilege system, see the [documentati
 
 ## Usage
 
+### Icinga 2
+
 The `icinga2` folder contains the command definition and service examples for use with Icinga2.
+
+For Icinga Director users, it contains a basket with service templates, service sets and the command itself. Before importing it, you first have to change the base service template, because your setup probably uses a different base service template than the one in the basket (`Base Service`).
+
+```
+# Update the base service template
+sed -i 's/Base Service/<YOUR_BASE_SERVICE_TEMPLATE>/' pve.json
+
+# Import the basket
+icingacli director basket restore --verbose < pve.json
+```
+
+The service sets are split into two parts - one for cluster wide checks (e.g., `pve-cluster` or `pve-ceph-health`) and one for per-host checks. This makes it easier to schedule downtimes during maintenances on one host. Therefore, add the `Proxmox` service set to all of your hosts and add the `Proxmox-Clusterwide` service set to only one of them.
+
+### CLI Usage
 
 ```
 usage: check_pve.py [-h] [--version] [-e API_ENDPOINT] [--api-port API_PORT] [-u API_USER] [-p API_PASSWORD |
