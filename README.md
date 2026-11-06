@@ -285,6 +285,7 @@ OK - No failed replication jobs on node1
 ```
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m ceph-health
 WARNING - Ceph Cluster is in warning state
+- nobackfill,norebalance,norecover flag(s) set
 ```
 
 **Check ZFS pool health**
