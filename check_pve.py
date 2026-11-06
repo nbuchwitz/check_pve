@@ -690,6 +690,11 @@ class CheckPVE:
             self.check_result = CheckState.UNKNOWN
             self.check_message = "Ceph Cluster is in unknown state"
 
+        for check in ceph_health.get("checks", {}).values():
+            message = check.get("summary", {}).get("message")
+            if message:
+                self.check_message += f"\n- {message}"
+
     def check_network_status(self, name: Optional[str] = None) -> None:
         """Check network interface status and bond health."""
         url = self.get_url(f"nodes/{self.options.node}/network")
