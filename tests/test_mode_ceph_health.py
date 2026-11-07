@@ -1,6 +1,7 @@
 """Tests for Ceph health status and summary output."""
 
 import shlex
+from typing import Optional
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -34,7 +35,7 @@ def test_check_ceph_health_without_messages(
     status: str,
     expected_state: CheckState,
     expected_message: str,
-    checks: dict | None,
+    checks: Optional[dict],
 ) -> None:
     """Preserve the status line when no summaries are available."""
     health = {"status": status}
