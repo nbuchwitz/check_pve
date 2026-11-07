@@ -4,14 +4,24 @@ Icinga check command for Proxmox VE via API
 ![Linter](https://github.com/nbuchwitz/check_pve/actions/workflows/lint.yml/badge.svg)
 ![Tests](https://github.com/nbuchwitz/check_pve/actions/workflows/test.yml/badge.svg)
 
+[![Python 3.9 CI support](https://img.shields.io/badge/Python-3.9-blue?logo=python)](https://github.com/nbuchwitz/check_pve/actions/workflows/test.yml)
+[![Python 3.10 CI support](https://img.shields.io/badge/Python-3.10-blue?logo=python)](https://github.com/nbuchwitz/check_pve/actions/workflows/test.yml)
+[![Python 3.11 CI support](https://img.shields.io/badge/Python-3.11-blue?logo=python)](https://github.com/nbuchwitz/check_pve/actions/workflows/test.yml)
+[![Python 3.12 CI support](https://img.shields.io/badge/Python-3.12-blue?logo=python)](https://github.com/nbuchwitz/check_pve/actions/workflows/test.yml)
+[![Python 3.13 CI support](https://img.shields.io/badge/Python-3.13-blue?logo=python)](https://github.com/nbuchwitz/check_pve/actions/workflows/test.yml)
+[![Python 3.14 CI support](https://img.shields.io/badge/Python-3.14-blue?logo=python)](https://github.com/nbuchwitz/check_pve/actions/workflows/test.yml)
+[![Python 3.15 CI support](https://img.shields.io/badge/Python-3.15-blue?logo=python)](https://github.com/nbuchwitz/check_pve/actions/workflows/test.yml)
+
 ## Setup
 
 ### Requirements
 
-This check command depends on **Python 3** and the following modules:
+This check command supports **Python 3.9 through 3.15** and depends on the following modules:
  * requests
  * argparse
  * packaging
+
+The test suite runs against each supported Python minor version in CI.
 
 **Installation on Debian / Ubuntu**
 ```
