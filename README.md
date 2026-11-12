@@ -235,7 +235,7 @@ OK - Storage usage is 54.23%|usage=54.23%;; used=128513.11MB;;;236980.36
 CRITICAL - Storage 'vms-disx' doesn't exist on node 'node01'
 
 ./check_pve.py -u <API_USER> -p <API_PASSWORD> -e <API_ENDPOINT> -m storage -n node1 --name pbs-disk
-CRITICAL - Storage 'vms-disx' is inactive on node 'node01'
+CRITICAL - Storage 'pbs-disk' is inactive on node 'node01'
 ```
 
 **Check subscription status**
