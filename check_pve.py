@@ -1032,6 +1032,12 @@ class CheckPVE:
             self.check_result = CheckState.CRITICAL
             self.check_message = f"Storage '{name}' doesn't exist on node '{self.options.node}'"
             return
+        else:
+            s_obj = next(s for s in data if s["storage"] == name)
+            if s_obj["active"] == 0:
+                self.check_result = CheckState.CRITICAL
+                self.check_message = f"Storage '{name}' is inactive on node '{self.options.node}'"
+                return
 
         url = self.get_url(f"nodes/{self.options.node}/storage/{name}/status")
         self.check_api_value(url, f"Usage of storage '{name}' is")
